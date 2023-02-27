@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+	targetNamespace="http://source.integraecdifferito.webservice.archiviocarichi.payer.esed.com" 
+	xmlns:tns="http://source.integraecdifferito.webservice.archiviocarichi.payer.esed.com"
+	xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:sd="http://dati.integraecdifferito.webservice.archiviocarichi.payer.esed.com" 
+	xmlns:srv="http://srv.webservice.archiviocarichi.payer.esed.com"
+	name="IntegraEcDifferito">
+	<wsdl:types>
+		<xsd:schema targetNamespace="http://source.integraecdifferito.webservice.archiviocarichi.payer.esed.com">
+			<xsd:import namespace="http://dati.integraecdifferito.webservice.archiviocarichi.payer.esed.com" schemaLocation="xsd/integraecdifferito.xsd" />
+			<xsd:import namespace="http://srv.webservice.archiviocarichi.payer.esed.com" schemaLocation="xsd/Srv.xsd" />
+		</xsd:schema>
+	</wsdl:types>
+	<wsdl:message name="InserimentoEcRequest">
+		<wsdl:part element="sd:InserimentoEcRequest" name="in"/>
+	</wsdl:message>
+	<wsdl:message name="InserimentoEcResponse">
+		<wsdl:part element="sd:InserimentoEcResponse" name="out"/>
+	</wsdl:message>		
+	<wsdl:message name="VariazioneEcRequest">
+		<wsdl:part element="sd:VariazioneEcRequest" name="in"/>
+	</wsdl:message>
+	<wsdl:message name="VariazioneEcResponse">
+		<wsdl:part element="sd:VariazioneEcResponse" name="out"/>
+	</wsdl:message>	
+	<wsdl:message name="CancellazioneEcRequest">
+		<wsdl:part element="sd:CancellazioneEcRequest" name="in"/>
+	</wsdl:message>
+	<wsdl:message name="CancellazioneEcResponse">
+		<wsdl:part element="sd:CancellazioneEcResponse" name="out"/>
+	</wsdl:message>	
+	<wsdl:message name="DiscaricoEcRequest">
+		<wsdl:part element="sd:DiscaricoEcRequest" name="in"/>
+	</wsdl:message>
+	<wsdl:message name="DiscaricoEcResponse">
+		<wsdl:part element="sd:DiscaricoEcResponse" name="out"/>
+	</wsdl:message>	
+	<wsdl:message name="IntegraEcDifferitoFault">
+		<wsdl:part name="fault" element="srv:Fault"></wsdl:part>
+	</wsdl:message>	
+	<wsdl:message name="RichiestaAvvisoPagoPaRequest">
+		<wsdl:part element="sd:RichiestaAvvisoPagoPaRequest" name="in"/>
+	</wsdl:message>
+	<wsdl:message name="RichiestaAvvisoPagoPaResponse">
+		<wsdl:part element="sd:RichiestaAvvisoPagoPaResponse" name="out"/>
+	</wsdl:message>
+	
+	<wsdl:portType name="IntegraEcDifferitoInterface">	
+		<wsdl:operation name="inserimentoEC">
+			<wsdl:input message="tns:InserimentoEcRequest" />
+			<wsdl:output message="tns:InserimentoEcResponse" />
+			<wsdl:fault name="IntegraEcDifferitoFaultException" message="tns:IntegraEcDifferitoFault"></wsdl:fault>
+		</wsdl:operation>
+		<wsdl:operation name="variazioneEC">
+			<wsdl:input message="tns:VariazioneEcRequest" />
+			<wsdl:output message="tns:VariazioneEcResponse" />
+			<wsdl:fault name="IntegraEcDifferitoFaultException" message="tns:IntegraEcDifferitoFault"></wsdl:fault>
+		</wsdl:operation>
+		<wsdl:operation name="cancellazioneEC">
+			<wsdl:input message="tns:CancellazioneEcRequest" />
+			<wsdl:output message="tns:CancellazioneEcResponse" />
+			<wsdl:fault name="IntegraEcDifferitoFaultException" message="tns:IntegraEcDifferitoFault"></wsdl:fault>
+		</wsdl:operation>	
+		<wsdl:operation name="discaricoEC">
+			<wsdl:input message="tns:DiscaricoEcRequest" />
+			<wsdl:output message="tns:DiscaricoEcResponse" />
+			<wsdl:fault name="IntegraEcDifferitoFaultException" message="tns:IntegraEcDifferitoFault"></wsdl:fault>
+		</wsdl:operation>	
+		<wsdl:operation name="richiestaAvvisoPagoPa">
+			<wsdl:input message="tns:RichiestaAvvisoPagoPaRequest"></wsdl:input>
+			<wsdl:output message="tns:RichiestaAvvisoPagoPaResponse"></wsdl:output>
+			<wsdl:fault name="IntegraEcDifferitoFaultException" message="tns:IntegraEcDifferitoFault"></wsdl:fault>
+		</wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name="IntegraEcDifferitoSOAPBinding" type="tns:IntegraEcDifferitoInterface">
+		<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http" />
+		<wsdl:operation name="inserimentoEC">
+			<soap:operation soapAction="" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="IntegraEcDifferitoFaultException">
+				<soap:fault name="IntegraEcDifferitoFaultException" use="literal" />
+			</wsdl:fault>
+		</wsdl:operation>	
+		<wsdl:operation name="variazioneEC">
+			<soap:operation soapAction="" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="IntegraEcDifferitoFaultException">
+				<soap:fault name="IntegraEcDifferitoFaultException" use="literal" />
+			</wsdl:fault>
+		</wsdl:operation>
+		<wsdl:operation name="cancellazioneEC">
+			<soap:operation soapAction="" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="IntegraEcDifferitoFaultException">
+				<soap:fault name="IntegraEcDifferitoFaultException" use="literal" />
+			</wsdl:fault>
+		</wsdl:operation>
+		<wsdl:operation name="discaricoEC">
+			<soap:operation soapAction="" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="IntegraEcDifferitoFaultException">
+				<soap:fault name="IntegraEcDifferitoFaultException" use="literal" />
+			</wsdl:fault>
+		</wsdl:operation>
+		<wsdl:operation name="richiestaAvvisoPagoPa">
+			<soap:operation soapAction="" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="IntegraEcDifferitoFaultException">
+				<soap:fault name="IntegraEcDifferitoFaultException" use="literal" />
+			</wsdl:fault>
+		</wsdl:operation>	
+	</wsdl:binding>
+	<wsdl:service name="IntegraEcDifferitoService">
+		<wsdl:port binding="tns:IntegraEcDifferitoSOAPBinding" name="IntegraEcDifferitoPort">
+			<soap:address location="http://localhost:10585/ArchivioCarichiService/integraecdifferito" />
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>

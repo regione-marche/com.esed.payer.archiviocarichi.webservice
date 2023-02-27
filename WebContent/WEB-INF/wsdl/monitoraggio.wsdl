@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+	targetNamespace="http://source.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+	xmlns:tns="http://source.monitoraggio.webservice.archiviocarichi.payer.esed.com" 
+	xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+	xmlns:sd="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+	xmlns:srv="http://srv.webservice.archiviocarichi.payer.esed.com" name="Monitoraggio" >
+
+	<wsdl:types>
+		<xsd:schema targetNamespace="http://source.monitoraggio.webservice.archiviocarichi.payer.esed.com">
+			<xsd:import namespace="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com" schemaLocation="xsd/monitoraggio.xsd" />
+			<xsd:import namespace="http://srv.webservice.archiviocarichi.payer.esed.com" schemaLocation="xsd/Srv.xsd"/>
+		</xsd:schema>
+	</wsdl:types>
+	
+	<wsdl:message name="MonitoraggioTransazioniRequest">
+		<wsdl:part element="sd:MonitoraggioTransazioniRequest" name="in"/>
+	</wsdl:message>
+	<wsdl:message name="MonitoraggioTransazioniResponse">
+		<wsdl:part element="sd:MonitoraggioTransazioniResponse" name="out"/>
+	</wsdl:message>
+	<wsdl:message name="MonitoraggioFault">
+		<wsdl:part name="fault" element="srv:Fault"></wsdl:part>
+	</wsdl:message>	
+		
+	<wsdl:portType name="MonitoraggioInterface">
+		<wsdl:operation name="monitoraggioTransazioni">
+			<wsdl:input message="tns:MonitoraggioTransazioniRequest" />
+			<wsdl:output message="tns:MonitoraggioTransazioniResponse" />
+			<wsdl:fault name="MonitoraggioFaultException" message="tns:MonitoraggioFault"></wsdl:fault>
+		</wsdl:operation>
+	</wsdl:portType>
+
+	<wsdl:binding name="MonitoraggioSOAPBinding" type="tns:MonitoraggioInterface">
+		<soap:binding style="document"
+			transport="http://schemas.xmlsoap.org/soap/http" />	
+		
+		<wsdl:operation name="monitoraggioTransazioni">
+			<soap:operation soapAction="" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="MonitoraggioFaultException">
+				<soap:fault name="MonitoraggioFaultException" use="literal" />
+			</wsdl:fault>
+		</wsdl:operation>
+	</wsdl:binding>
+
+	<wsdl:service name="MonitoraggioService">
+		<wsdl:port binding="tns:MonitoraggioSOAPBinding" name="MonitoraggioPort">
+			<soap:address location="http://localhost:9071/ArchivioCarichiService/monitoraggio" />
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>

@@ -1,0 +1,287 @@
+<!-- Use this file to deploy some handlers/chains and services      -->
+<!-- Two ways to do this:                                           -->
+<!--   java org.apache.axis.client.AdminClient deploy.wsdd          -->
+<!--      after the axis server is running                          -->
+<!-- or                                                             -->
+<!--   java org.apache.axis.utils.Admin client|server deploy.wsdd   -->
+<!--      from the same directory that the Axis engine runs         -->
+
+<deployment
+    xmlns="http://xml.apache.org/axis/wsdd/"
+    xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">
+
+  <!-- Services from MonitoraggioService WSDL service -->
+
+  <service name="MonitoraggioPort" provider="java:RPC" style="document" use="literal">
+      <parameter name="wsdlTargetNamespace" value="http://source.monitoraggio.webservice.archiviocarichi.payer.esed.com"/>
+      <parameter name="wsdlServiceElement" value="MonitoraggioService"/>
+      <parameter name="schemaQualified" value="http://srv.webservice.archiviocarichi.payer.esed.com,http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"/>
+      <parameter name="schemaUnqualified" value="http://source.monitoraggio.webservice.archiviocarichi.payer.esed.com"/>
+      <parameter name="wsdlServicePort" value="MonitoraggioPort"/>
+      <parameter name="className" value="com.esed.payer.archiviocarichi.webservice.monitoraggio.source.MonitoraggioSOAPBindingImpl"/>
+      <parameter name="wsdlPortType" value="MonitoraggioInterface"/>
+      <parameter name="typeMappingVersion" value="1.2"/>
+      <operation name="monitoraggioTransazioni" qname="monitoraggioTransazioni" returnQName="retNS:MonitoraggioTransazioniResponse" xmlns:retNS="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com" returnType="rtns:MonitoraggioTransazioniResponse" xmlns:rtns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com" soapAction="" >
+        <parameter qname="pns:MonitoraggioTransazioniRequest" xmlns:pns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com" type="tns:MonitoraggioTransazioniRequest" xmlns:tns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"/>
+        <fault name="MonitoraggioFaultException" qname="fns:Fault" xmlns:fns="http://srv.webservice.archiviocarichi.payer.esed.com" class="com.esed.payer.archiviocarichi.webservice.srv.FaultType" type="tns:FaultType" xmlns:tns="http://srv.webservice.archiviocarichi.payer.esed.com"/>
+      </operation>
+      <parameter name="allowedMethods" value="monitoraggioTransazioni"/>
+
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:DettaglioTransazione"
+        type="java:com.esed.payer.archiviocarichi.webservice.monitoraggio.dati.DettaglioTransazione"
+        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>MonitoraggioTransazioniRequest>codiceEnte"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>codiceAutorizzazioneBanca"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>MonitoraggioTransazioniRequest>numeroBollettinoPagoPA"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>MonitoraggioTransazioniRequest>codiceUfficio"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>MonitoraggioTransazioniRequest>tipoUfficio"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>dataTransazione"
+        type="java:java.util.Calendar"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>codiceIdentificativoBancaIUR"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>importoBollettino"
+        type="java:java.math.BigDecimal"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://srv.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:FaultType"
+        type="java:com.esed.payer.archiviocarichi.webservice.srv.FaultType"
+        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>tipologiaBollettino"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>ResponseType>retMessage"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>numeroDocumento"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>codiceIUV"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>tipologiaServizio"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>MonitoraggioTransazioniRequest>codiceSocieta"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:MonitoraggioTransazioniResponse"
+        type="java:com.esed.payer.archiviocarichi.webservice.monitoraggio.dati.MonitoraggioTransazioniResponse"
+        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>intestatarioContoCorrente"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>MonitoraggioTransazioniRequest>numeroDocumento"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>MonitoraggioTransazioniRequest>codiceUtente"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>codiceTransazione"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:ResponseType"
+        type="java:com.esed.payer.archiviocarichi.webservice.monitoraggio.dati.ResponseType"
+        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>numeroContoCorrente"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:MonitoraggioTransazioniRequest"
+        type="java:com.esed.payer.archiviocarichi.webservice.monitoraggio.dati.MonitoraggioTransazioniRequest"
+        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>denominazione"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>codiceFiscale"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>numeroBollettinoPagoPA"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>importoTotaleTransazione"
+        type="java:java.math.BigDecimal"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>flagRendicontazione"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>dataPagamento"
+        type="java:java.util.Calendar"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>DettaglioTransazione>flagRiconciliazione"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+      <typeMapping
+        xmlns:ns="http://dati.monitoraggio.webservice.archiviocarichi.payer.esed.com"
+        qname="ns:>ResponseType>retCode"
+        type="java:java.lang.String"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        encodingStyle=""
+      />
+  </service>
+</deployment>

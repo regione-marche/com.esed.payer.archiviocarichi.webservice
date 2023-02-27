@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+	xmlns:tns="http://srv.webservice.archiviocarichi.payer.esed.com" 
+	elementFormDefault="qualified" 
+	targetNamespace="http://srv.webservice.archiviocarichi.payer.esed.com">
+	
+	<xsd:complexType name="FaultType">
+		<xsd:sequence>
+			<xsd:element name="code" type="xsd:int"/>
+			<xsd:element name="message" type="xsd:string"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:element name="Fault" type="tns:FaultType"/>
+	
+</xsd:schema>

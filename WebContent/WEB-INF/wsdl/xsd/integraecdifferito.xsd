@@ -1,0 +1,1043 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:tns="http://dati.integraecdifferito.webservice.archiviocarichi.payer.esed.com"
+	targetNamespace="http://dati.integraecdifferito.webservice.archiviocarichi.payer.esed.com"
+	elementFormDefault="qualified">
+	
+	<!-- InserimentoEc  -->
+	<xsd:element name="InserimentoEcResponse" type="tns:InserimentoEcResponse">
+		<xsd:annotation>
+			<xsd:documentation>RISPOSTA INSERIMENTO POSIZIONE DEBITORIA EC DIFFERITO</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="InserimentoEcRequest" type="tns:InserimentoEcRequest">
+		<xsd:annotation>
+			<xsd:documentation>RICHIESTA INSERIMENTO POSIZIONE DEBITORIA EC DIFFERITO</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	
+	<!-- VariazioneEc  -->
+	<xsd:element name="VariazioneEcResponse" type="tns:VariazioneEcResponse">
+		<xsd:annotation>
+			<xsd:documentation>RISPOSTA VARIAZIONE POSIZIONE DEBITORIA EC DIFFERITO</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="VariazioneEcRequest" type="tns:VariazioneEcRequest">
+		<xsd:annotation>
+			<xsd:documentation>RICHIESTA VARIAZIONE POSIZIONE DEBITORIA EC DIFFERITO</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	
+	<!-- CancellazioneEc  -->
+	<xsd:element name="CancellazioneEcResponse" type="tns:CancellazioneEcResponse">
+		<xsd:annotation>
+			<xsd:documentation>RISPOSTA CANCELLAZIONE POSIZIONE DEBITORIA EC DIFFERITO</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="CancellazioneEcRequest" type="tns:CancellazioneEcRequest">
+		<xsd:annotation>
+			<xsd:documentation>RICHIESTA CANCELLAZIONE POSIZIONE DEBITORIA EC DIFFERITO</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	
+	<!-- DiscaricoEc  -->
+	<xsd:element name="DiscaricoEcResponse" type="tns:DiscaricoEcResponse">
+		<xsd:annotation>
+			<xsd:documentation>RISPOSTA DISCARICO POSIZIONE DEBITORIA EC DIFFERITO</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="DiscaricoEcRequest" type="tns:DiscaricoEcRequest">
+		<xsd:annotation>
+			<xsd:documentation>RICHIESTA DISCARICO POSIZIONE DEBITORIA EC DIFFERITO</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	
+	<!-- RichiestaAvvisoPagPa  -->
+	<xsd:element name="RichiestaAvvisoPagoPaResponse" type="tns:RichiestaAvvisoPagoPaResponse">
+		<xsd:annotation>
+			<xsd:documentation>RISPOSTA ALLA RICHIESTA DI PRODUZIONE DELL'AVVISO PAGOPA</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="RichiestaAvvisoPagoPaRequest" type="tns:RichiestaAvvisoPagoPaRequest">
+		<xsd:annotation>
+			<xsd:documentation>RICHIESTA DI PRODUZIONE DELL'AVVISO PAGOPA</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	
+	
+	<xsd:complexType name="InserimentoEcRequest">
+		<xsd:complexContent>
+    		<xsd:extension base="tns:RequestBase" >
+	    		<xsd:sequence>
+	    			<xsd:element name="configurazione" type="tns:Configurazione" minOccurs="1" maxOccurs="1" nillable="false" >
+						<xsd:annotation>
+							<xsd:documentation>dati configurazione per generazione I.U.V.</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+	    			<xsd:element name="ruolo" type="tns:Ruolo" minOccurs="1" maxOccurs="1" nillable="false" >
+						<xsd:annotation>
+							<xsd:documentation>dati imposta servizio/tipologia servizio</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+	    			<xsd:element name="documento" type="tns:Documento" minOccurs="1" maxOccurs="1" nillable="false" >
+						<xsd:annotation>
+							<xsd:documentation>dati del documento</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+                    <xsd:element name="anagrafica" type="tns:Anagrafica" minOccurs="1" maxOccurs="1" nillable="false" >
+						<xsd:annotation>
+							<xsd:documentation>dati anagrafica associata al documento</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+                    <xsd:element name="listScadenze" type="tns:Scadenza" minOccurs="1" maxOccurs="unbounded" nillable="false"  >
+						<xsd:annotation>
+							<xsd:documentation>lista scadenze del documento</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="listTributi" type="tns:Tributo" minOccurs="1" maxOccurs="unbounded" nillable="false"  >
+						<xsd:annotation>
+							<xsd:documentation>lista tributi del documento</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+	    		</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+	</xsd:complexType>	
+	
+	<xsd:complexType name="InserimentoEcResponse">
+		<xsd:complexContent>
+    		<xsd:extension base="tns:ResponseBase">
+    			<xsd:sequence>
+	    			<xsd:element name="documento" type="tns:Documento" minOccurs="1" maxOccurs="1" nillable="false" >
+						<xsd:annotation>
+							<xsd:documentation>dati del documento</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+    			</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+	</xsd:complexType>	
+	
+	<xsd:complexType name="VariazioneEcRequest">
+		<xsd:complexContent>
+    		<xsd:extension base="tns:RequestBase" >
+	    		<xsd:sequence>
+	    			<xsd:element name="configurazione" type="tns:Configurazione" minOccurs="1" maxOccurs="1" nillable="false" >
+						<xsd:annotation>
+							<xsd:documentation>dati configurazione per generazione I.U.V.</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+	    			<xsd:element name="ruolo" type="tns:Ruolo" minOccurs="1" maxOccurs="1" nillable="false" >
+						<xsd:annotation>
+							<xsd:documentation>dati imposta servizio/tipologia servizio</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+	    			<xsd:element name="documento" type="tns:Documento" minOccurs="1" maxOccurs="1" nillable="false" >
+						<xsd:annotation>
+							<xsd:documentation>dati del documento</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="anagrafica" type="tns:Anagrafica" minOccurs="1" maxOccurs="1" nillable="false" >
+						<xsd:annotation>
+							<xsd:documentation>dati anagrafica associata al documento</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="listScadenze" type="tns:Scadenza" minOccurs="1" maxOccurs="unbounded" nillable="false"  >
+						<xsd:annotation>
+							<xsd:documentation>lista scadenze del documento</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="listTributi" type="tns:Tributo" minOccurs="1" maxOccurs="unbounded" nillable="false"  >
+						<xsd:annotation>
+							<xsd:documentation>lista tributi del documento</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+	    		</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+	</xsd:complexType>	
+	
+	<xsd:complexType name="VariazioneEcResponse">
+		<xsd:complexContent>
+    		<xsd:extension base="tns:ResponseBase">
+    			<xsd:sequence>
+	    			<xsd:element name="documento" type="tns:Documento" minOccurs="1" maxOccurs="1" nillable="false" >
+						<xsd:annotation>
+							<xsd:documentation>dati del documento</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+    			</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+	</xsd:complexType>	
+	
+	<xsd:complexType name="CancellazioneEcRequest">
+		<xsd:complexContent>
+    		<xsd:extension base="tns:RequestBase" >
+    			<xsd:sequence>
+	    			<xsd:element name="numeroDocumento" minOccurs="1" maxOccurs="1" nillable="false" >
+						<xsd:annotation>
+							<xsd:documentation>numero documento</xsd:documentation>
+						</xsd:annotation>
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="20" />
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+    			</xsd:sequence>	
+    		</xsd:extension>
+    	</xsd:complexContent>
+	</xsd:complexType>	
+	
+	<xsd:complexType name="CancellazioneEcResponse">
+		<xsd:complexContent>
+    		<xsd:extension base="tns:ResponseBase">
+	    		<xsd:sequence>
+	    			<xsd:element name="numeroDocumento" minOccurs="1" maxOccurs="1" nillable="false" >
+						<xsd:annotation>
+							<xsd:documentation>numero documento</xsd:documentation>
+						</xsd:annotation>
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="20" />
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+    			</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+	</xsd:complexType>	
+	
+	<xsd:complexType name="DiscaricoEcRequest">
+		<xsd:complexContent>
+    		<xsd:extension base="tns:RequestBase">
+	    		<xsd:sequence>
+	    			<xsd:element name="documento" type="tns:Documento" minOccurs="1" maxOccurs="1" nillable="false" >
+						<xsd:annotation>
+							<xsd:documentation>dati del documento</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="listTributi" type="tns:Tributo" minOccurs="1" maxOccurs="unbounded" nillable="false"  >
+						<xsd:annotation>
+							<xsd:documentation>lista tributi del documento da discaricare</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+    			</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+	</xsd:complexType>	
+	
+	<xsd:complexType name="DiscaricoEcResponse">
+		<xsd:complexContent>
+    		<xsd:extension base="tns:ResponseBase">
+    			<xsd:sequence>
+					<xsd:element name="numeroDocumento" minOccurs="1" maxOccurs="1" nillable="false" >
+						<xsd:annotation>
+							<xsd:documentation>numero documento</xsd:documentation>
+						</xsd:annotation>
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="20" />
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+	    		</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="RichiestaAvvisoPagoPaRequest">
+		<xsd:complexContent>
+    		<xsd:extension base="tns:RequestBase" >
+	    		<xsd:sequence>
+
+
+	    			<xsd:element name="stampaDocumento" type="tns:StampaDocumento" minOccurs="1" maxOccurs="1" nillable="false" >
+						<xsd:annotation>
+							<xsd:documentation>dati del documento da stampare</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+
+
+	    		</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+	</xsd:complexType>	
+
+	<xsd:complexType name="RichiestaAvvisoPagoPaResponse">
+		<xsd:complexContent>
+    		<xsd:extension base="tns:ResponseBase">
+    			<xsd:sequence>
+    				<xsd:element name="stampaDocumento"
+    					type="tns:StampaDocumento" minOccurs="1" maxOccurs="1"
+    					nillable="false">
+    					<xsd:annotation>
+    						<xsd:documentation>
+    							dati del documento
+    						</xsd:documentation>
+    					</xsd:annotation>
+    				</xsd:element>
+
+    				<xsd:element name="stampaPDFDocumentoPagoPA" type="xsd:base64Binary" minOccurs="1" maxOccurs="1">
+    					<xsd:annotation>
+    						<xsd:documentation>PDF dell'avviso pagoPA</xsd:documentation>
+    					</xsd:annotation></xsd:element>
+    			</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+	</xsd:complexType>			
+
+	
+	<!--  classi generiche	-->
+	<xsd:complexType name="RequestBase">
+		<xsd:sequence>
+			<xsd:element name="codiceUtente" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>codice utente</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="5" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="tipoServizio" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>tipo servizio EP = entrate</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="2" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="codiceEnte" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>codice ente</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="5" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="tipoUfficio" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>tipo ufficio</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="1" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="codiceUfficio" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>codice ufficio</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="6" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="impostaServizio" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>codice imposta servizio</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="4" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="ResponseBase">
+		<xsd:sequence>
+			<xsd:element name="codiceUtente" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>codice utente</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="5" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="tipoServizio" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>tipo servizio EP = entrate</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="2" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="codiceEnte" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>codice ente</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="5" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="tipoUfficio" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>tipo ufficio</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="1" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="codiceUfficio" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>codice ufficio</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="6" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="impostaServizio" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>codice imposta servizio</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="4" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="codiceEsito" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>codice dell'esito dell'operazione (errore se diverso da 00)</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="2" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="messaggioEsito" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>messaggio dell'esito dell'operazione</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="200" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="Configurazione">
+		<xsd:sequence>
+			<xsd:element name="flagGenerazioneIUV" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>flag richiesta generazione I.U.V. ('Y' - generare I.U.V., 'N' - non generare I.U.V.)</xsd:documentation> 
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="1" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="configurazioneIUV" type="tns:ConfigurazioneIUV" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>dati per generazione I.U.V., obbligatorio in caso di flagGenerazioneIUV pari a 'Y'</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="flagStampaAvviso" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>flag richiesta stampa avviso (valori ammessi: 'Y' o 'N')</xsd:documentation> 
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="1" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="identificativoFlusso" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>identificativo univoco flusso di richiesta</xsd:documentation> 
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="50" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	
+	<xsd:complexType name="ConfigurazioneIUV">
+		<xsd:sequence>
+			<xsd:element name="identificativoDominio" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>codice identificativo dominio</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="16" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="auxDigit" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>aux digit</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="1" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="applicationCode" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>codice application code</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="2" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="segregationCode" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>codice segregazione</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="2" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="carattereServizio" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>carattere di servizio</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="2" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="Ruolo">
+		<xsd:sequence>
+			<xsd:element name="descrizioneImpostaServizio" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>descrizione imposta servizio</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="50" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="codiceTipologiaServizio" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>codice tipologia servizio</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="3" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="descrizioneTipologiaServizio" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>descrizione tipologia servizio</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="50" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="Documento">
+		<xsd:sequence>
+			<xsd:element name="numeroDocumento" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>numero documento</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="20" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="annoEmissione" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>anno documento</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="4" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="numeroEmissione" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>numero emissione</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="10" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="dataNotifica" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>data notifica GG/MM/AAAA</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="10" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="numeroBollettinoPagoPA" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>numero bollettino di saldo del documento</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="18" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="impBollettinoTotaleDocumento" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>importo bollettino del totale del documento</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+				 	<xsd:restriction base="xsd:decimal">
+						<xsd:totalDigits value="15" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="ibanAccredito" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>IBAN accredito</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="35" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="flagFatturazioneElettronica" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>flag fatturazione elettronica (valori ammessi: 'Y' o 'N')</xsd:documentation> 
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="1" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="identificativoUnivocoVersamento" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>codice identificativo univoco versamento</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="17" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="causale" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>causale del documento</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="120" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="ibanAppoggio" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>IBAN appoggio</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="35" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<!-- inizio LP PG200360  -->
+			<xsd:element name="tassonomia" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>Tassonomia</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="9" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<!-- fine LP PG200360  -->
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="Scadenza">
+		<xsd:sequence>
+			<xsd:element name="numeroRata" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>numero rata</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:int">
+						<xsd:minInclusive value="1" />
+						<xsd:maxInclusive value="99" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>			
+			<xsd:element name="dataScadenzaRata" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>data scadenza GG/MM/AAAA</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="10" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="numeroBollettinoPagoPA" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>numero bollettino della rata</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="18" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="impBollettinoRata" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>importo bollettino della rata</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+				 	<xsd:restriction base="xsd:decimal">
+						<xsd:totalDigits value="15" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="identificativoUnivocoVersamento" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>codice identificativo univoco versamento della rata</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="17" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="Tributo">
+		<xsd:sequence>
+			<xsd:element name="codiceTributo" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>codice tributo</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="4" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>			
+			<xsd:element name="annoTributo" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation> anno tributo AAAA</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="4" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="progressivoTributo" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>progressivo tributo</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:int">
+						<xsd:minInclusive value="1" />
+						<xsd:maxInclusive value="999" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="impTributo" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>importo tributo</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+				 	<xsd:restriction base="xsd:decimal">
+						<xsd:totalDigits value="15" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="noteTributo" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>note tributo</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="85" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="codiceCapitolo" minOccurs="0" maxOccurs="1" nillable="true">
+				<xsd:annotation>
+					<xsd:documentation>
+						codice del capitolo a cui e' associato il tributo
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="64"></xsd:maxLength>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="accertamento" minOccurs="0" maxOccurs="1" nillable="true">
+                <xsd:annotation>
+                	<xsd:documentation>accertamento legato al tributo</xsd:documentation>
+                </xsd:annotation>
+                <xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="64"></xsd:maxLength>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<!-- inizio LP PG210130 -->
+			<xsd:element name="articolo" minOccurs="0" maxOccurs="1" nillable="true">
+				<xsd:annotation>
+					<xsd:documentation>articolo associato al tributo</xsd:documentation>
+				</xsd:annotation>
+                <xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="64"></xsd:maxLength>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>				
+			<xsd:element name="identificativoDominio" minOccurs="0" maxOccurs="1" nillable="true">
+				<xsd:annotation>
+					<xsd:documentation>Identificativo dominio, identifica il CF dell'ente a cui spetta il tributo</xsd:documentation>
+				</xsd:annotation>
+                <xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="16"></xsd:maxLength>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="IBANBancario" minOccurs="0" maxOccurs="1" nillable="true">
+				<xsd:annotation>
+					<xsd:documentation>IBAN Bancario dell'ente a cui spetta il tributo</xsd:documentation>
+				</xsd:annotation>
+                <xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="27"></xsd:maxLength>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="IBANPostale" minOccurs="0" maxOccurs="1" nillable="true">
+				<xsd:annotation>
+					<xsd:documentation>IBAN Postale dell'ente a cui spetta il tributo</xsd:documentation>
+				</xsd:annotation>
+                <xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="27"></xsd:maxLength>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>				
+			<!-- fine LP PG210130 -->
+			<!-- inizio LP PG22XX05 -->
+			<xsd:element name="codiceTipologiaServizio" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>codice tipologia servizio associato al tributo</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="3" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<!-- fine LP PG22XX05 -->
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="Anagrafica">
+		<xsd:sequence>
+			<xsd:element name="codiceFiscale" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>codice fiscale</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="16" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>  
+			<xsd:element name="denominazione" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>denominazione</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="50" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>  
+			<xsd:element name="tipoAnagrafica" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>tipo anagrafica</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="1" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>  
+			<xsd:element name="codiceBelfioreComuneNascita" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>codice belfiore comune di nascita</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="4" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>  
+			<xsd:element name="dataNascita" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>data di nascita GG/MM/AAAA</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="10" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="indirizzoFiscale" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation>indirizzo fiscale del contribuente</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="50" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>			
+			<xsd:element name="codiceBelfioreComuneFiscale" minOccurs="1" maxOccurs="1" nillable="false" >
+				<xsd:annotation>
+					<xsd:documentation> codice belfiore comune fiscale</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="4" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="email" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation> indirizzo email</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="100" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="emailPec" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation> indirizzo email pec</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="100" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="StampaDocumento">
+
+		<xsd:sequence>
+			<xsd:element name="codiceFiscale" minOccurs="1"
+				maxOccurs="1">
+                <xsd:annotation>
+                	<xsd:documentation>codice fiscale del documento per cui si richiede la generazione del pdf dell'avviso pagoPA</xsd:documentation>
+                </xsd:annotation>
+                <xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="16"></xsd:maxLength>
+						<xsd:minLength value="11"></xsd:minLength>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="numeroDocumento" minOccurs="1"
+				maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>
+						numero del documento per cui si richiede la
+						produzione del pdf dell'avviso pagoPA
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="20" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="importoTotaleDocumento" type="xsd:string"
+				minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>
+						importo bollettino del totale del documento in
+						centesimi di Euro, no virgola, per cui si
+						richiede la produzione del pdf dell'avviso
+						pagoPA
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="flagDatiAttualizzati" type="xsd:string"
+				minOccurs="0" maxOccurs="1" nillable="true">
+				<xsd:annotation>
+					<xsd:documentation>
+						flag attualizzazione dati, se presente e vale "Y" la stampa viene riprodotta con i dati attualizzati
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="pathStampaDocumento" type="xsd:string"
+				minOccurs="0" maxOccurs="1" nillable="true">
+				<xsd:annotation>
+					<xsd:documentation>
+						path per la stampa dell'avviso pagoPA
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+</xsd:schema>
