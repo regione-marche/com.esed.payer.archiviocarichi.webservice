@@ -883,6 +883,28 @@
 				</xsd:simpleType>
 			</xsd:element>
 			<!-- fine LP PG22XX05 -->
+			<!-- inizio SB feature/PAGONET-537 -->
+			<xsd:element name="metadatiPagoPATariTefaKey" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>Solo per TARI/TEFA. Per TARI impostare a TARI-TEFA-1. Per TEFA impostare a TARI-TEFA-2</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="3" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="metadatiPagoPATariTefaValue" minOccurs="0" maxOccurs="1" nillable="true" >
+				<xsd:annotation>
+					<xsd:documentation>Solo per TARI/TEFA. Formato [codice catastale Ente]|[anno diriferimento]|[codice tributo]. Es per TARI: A000|2023|3944. Es. per TEFA: A000|2023|TEFA</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="3" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<!-- fine SB feature/PAGONET-537 -->
 		</xsd:sequence>
 	</xsd:complexType>
 	
