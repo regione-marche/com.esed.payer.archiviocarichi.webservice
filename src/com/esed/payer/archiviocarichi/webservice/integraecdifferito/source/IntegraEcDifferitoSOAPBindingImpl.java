@@ -428,7 +428,12 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 										dettPag.getIBANBancario(), 
 										(dettPag.getIBANPostale() != null && dettPag.getIBANPostale().trim().length() > 0 ? dettPag.getIBANPostale().trim() : ""),
 										dettPag.getCodiceTipologiaServizio(), //LP PG22XX05
-										'C');
+										'C',
+										//inizio SB PAGONET-537
+										dettPag.getMetadatiPagoPATariTefaKey(),
+										dettPag.getMetadatiPagoPATariTefaValue()
+										//fine SB PAGONET-537
+										);
 							} else {
 								throw new ValidazioneException("Per DettaglioPagamento non si riesce a valorizzare il numero Bollettino!");
 							}
