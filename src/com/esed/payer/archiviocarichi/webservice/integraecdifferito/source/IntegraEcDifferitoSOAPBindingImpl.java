@@ -428,7 +428,12 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 										dettPag.getIBANBancario(), 
 										(dettPag.getIBANPostale() != null && dettPag.getIBANPostale().trim().length() > 0 ? dettPag.getIBANPostale().trim() : ""),
 										dettPag.getCodiceTipologiaServizio(), //LP PG22XX05
-										'C');
+										'C',
+										//inizio SB PAGONET-537
+										dettPag.getMetadatiPagoPATariTefaKey(),
+										dettPag.getMetadatiPagoPATariTefaValue()
+										//fine SB PAGONET-537
+										);
 							} else {
 								throw new ValidazioneException("Per DettaglioPagamento non si riesce a valorizzare il numero Bollettino!");
 							}
@@ -525,6 +530,11 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								//inizio LP PG22XX05
 								String codiceTipologiaServizio = tributo.getCodiceTipologiaServizio() == null ? "" :  tributo.getCodiceTipologiaServizio();
 								//fine LP PG22XX05
+								
+								//inizio SB PAGONET-537
+								String metadatiPagoPATariTefaKey = tributo.getMetadatiPagoPATariTefaKey() == null ? "" : tributo.getMetadatiPagoPATariTefaKey();
+								String metadatiPagoPATariTefaValue = tributo.getMetadatiPagoPATariTefaValue() == null ? "" : tributo.getMetadatiPagoPATariTefaValue();
+								//fine SB PAGONET-537
 
 								debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH7");
 								/*
@@ -549,6 +559,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 										//, articolo, idDominio, ibanBancario, ibanPostale);
 										, articolo, idDominio, ibanBancario, ibanPostale
 										, codiceTipologiaServizio
+										, metadatiPagoPATariTefaKey, metadatiPagoPATariTefaValue //PAGONET-537
 										);
 										//fine LP PG22XX05
 								//fine LP PG210130
@@ -2371,6 +2382,12 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 		        tributo.setIdentificativoDominio(wrsTrib.getString(17));
 		        tributo.setIBANBancario(wrsTrib.getString(18));
 		        tributo.setIBANPostale(wrsTrib.getString(19));
+		        
+		        //inizio SB PAGONET-537
+		        tributo.setMetadatiPagoPATariTefaKey(wrsTrib.getString(21));
+		        tributo.setMetadatiPagoPATariTefaValue(wrsTrib.getString(22));
+		        //fine SB PAGONET-537
+		        
 		        //fine LP PG210130
 			    tributi.add(tributo);
 			}
