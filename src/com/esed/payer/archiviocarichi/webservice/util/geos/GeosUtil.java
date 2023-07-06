@@ -115,6 +115,17 @@ public class GeosUtil {
         	tipoStampaFlu = "B";
         if (tipoStampa.equalsIgnoreCase("POSTE"))
         	tipoStampaFlu = "P";
+        //PGNTACWS-1 - inizio
+        String flagMultibeneficiario = "";
+        try {
+        	flagMultibeneficiario = resultSet.getString("FLAG_MULTIBEN"); 
+        } catch (Exception ex) {
+        	ex.printStackTrace();
+        } 
+        if (flagMultibeneficiario!=null && flagMultibeneficiario.trim().equals("Y")) {
+        	tipoStampaFlu = "B";
+        }
+        //PGNTACWS-1 - fine
         String idFlusso = resultSet.getString("FLU_ID_FLUSSO"); //TODO da verificare se serve
 		
         //17022021 GG Tk 2021021588000051 - inizio
