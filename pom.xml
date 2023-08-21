@@ -96,13 +96,6 @@
 			<scope>compile</scope>
 		</dependency>
 
-
-		<dependency>
-			<groupId>com.seda.payer.core</groupId>
-			<artifactId>com.seda.payer.core</artifactId>
-			<version>2.2.3</version>
-			<scope>compile</scope>
-		</dependency>
 		<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
 		<dependency>
 			<groupId>commons-io</groupId>
@@ -137,10 +130,9 @@
 		<dependency>
 			<groupId>com.seda.data</groupId>
 			<artifactId>com.seda.data</artifactId>
-			<version>1.0</version>
-			<scope>provided</scope>
+			<version>3.0</version>
+			<scope>compile</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>com.seda.commons</groupId>
 			<artifactId>com.seda.commons</artifactId>
@@ -168,7 +160,7 @@
 		<dependency>
 			<groupId>com.seda.payer.pgec.webservice.client</groupId>
 			<artifactId>com.seda.payer.pgec.webservice.client</artifactId>
-			<version>1.0</version>
+			<version>2.6.0</version>
 			<scope>compile</scope>
 		</dependency>
 
@@ -218,9 +210,26 @@
 			<scope>compile</scope>
 		</dependency>
 
-	</dependencies>
+		<dependency>
+			  <groupId>it.maggioli.pagopa.jppa.client</groupId>
+			  <artifactId>it.maggioli.pagopa.jppa.client</artifactId>
+			  <version>1.0.0</version>
+			  <scope>compile</scope>
+		</dependency>
 
 
-
+		<dependency>
+			<groupId>com.seda.payer.core</groupId>
+			<artifactId>com.seda.payer.core</artifactId>
+			<version>2.7.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.seda.payer.integraente.webservice.client</groupId>
+			<artifactId>com.seda.payer.integraente.webservice.client</artifactId>
+			<version>2.1.0</version>
+			<scope>compile</scope>
+		</dependency>
+  </dependencies>
 
 </project>
