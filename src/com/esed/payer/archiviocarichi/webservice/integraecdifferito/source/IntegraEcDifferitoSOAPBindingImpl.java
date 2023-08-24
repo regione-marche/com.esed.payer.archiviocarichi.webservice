@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.SimpleDateFormat;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -42,6 +43,8 @@ import javax.xml.bind.JAXB;
 
 import org.apache.axis.utils.ByteArrayOutputStream;
 import org.apache.commons.io.FileUtils;
+import org.threeten.bp.OffsetDateTime;
+import org.threeten.bp.format.DateTimeFormatter;
 
 import com.esed.payer.archiviocarichi.webservice.config.PropKeys;
 import com.esed.payer.archiviocarichi.webservice.exception.ConfigurazioneException;
@@ -113,6 +116,8 @@ import com.seda.payer.facade.dto.ConfigPagamentoDto;
 import com.seda.payer.integraente.webservice.dati.RecuperaDatiBollettinoResponse;
 import com.seda.payer.integraente.webservice.dati.TipoBollettino;
 
+import io.swagger.client.model.DettaglioDovutoDto;
+import io.swagger.client.model.DettaglioDovutoDto.CodiceTipoDebitoEnum;
 import io.swagger.client.model.DovutoDto;
 //inizio LP - mail Giorgia 20200608
 //import com.esed.payer.archiviocarichi.webservice.util.geos.WSRest_GEOS;
@@ -797,9 +802,34 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								bFoundResult = true;
 							}
 						}
+			
+						// Se il bollettino è multirata, invio le rate come dovuti separati
+						if (in.getListScadenze().length > 1) {
+							DovutoDto dovuto = new DovutoDto(pgResponse, "EntTest1");
+							List<DettaglioDovutoDto> dettaglioList = new ArrayList<>();
+							int progressivo = 1;
+
+							for(Scadenza scadenza : in.getListScadenze()) {														
+								
+								DettaglioDovutoDto dettaglio = new DettaglioDovutoDto();
+								dettaglio.setCausaleDebito(pgResponse.getCausale() + ", rata: " + scadenza.getNumeroRata());   
+								dettaglio.setCodiceIpaCreditore("EntTest1"); // codiceIpa 
+								dettaglio.setCodiceTipoDebito(CodiceTipoDebitoEnum.TARI); // CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio()) 		
+								dettaglio.setDataInizioValidita(OffsetDateTime.parse(Calendar.getInstance().getTime().toInstant().atOffset(ZoneOffset.UTC).toString(), DateTimeFormatter.ISO_OFFSET_DATE_TIME)); 
+						 		dettaglio.setGruppo("multirata"); 
+								dettaglio.setIdDeb(scadenza.getIdentificativoUnivocoVersamento()+scadenza.getNumeroRata()); 
+								dettaglio.setImportoDebito(scadenza.getImpBollettinoRata().doubleValue() / 100D);
+								dettaglio.setOrdinamento(progressivo); 
+								dettaglioList.add(dettaglio);
+								progressivo++;							
+							}
+							dovuto.setDettaglioDovuto(dettaglioList);
+							jppa.inviaDovuti(token, codiceIpa, dovuto);	
+						} 
+						// Se il bollettino è multirata o se è soluzione unica, invio un dovuto con l'importo totale.
 						DovutoDto dovuto = new DovutoDto(pgResponse, "EntTest1", Arrays.asList(in.getListTributi())); 
 						jppa.inviaDovuti(token, codiceIpa, dovuto);
-						dao.aggiornaFlagInviaDovuto(progressivoFlussoPerInviaDovuti, getSchemaDifferito(dbSchemaCodSocieta)); 
+						dao.aggiornaFlagInviaDovuto(progressivoFlussoPerInviaDovuti, getSchemaDifferito(dbSchemaCodSocieta)); 							
 					}
 				}				
 				// SR 10082023 fine
