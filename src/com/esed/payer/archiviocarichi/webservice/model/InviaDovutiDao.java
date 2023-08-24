@@ -29,23 +29,16 @@ public class InviaDovutiDao  extends BaseDaoHandler {
 		this.schema = schema;
 	}
 	
-	public String getCodiceIpa(String cutecute, String codiceEnte) throws Exception {
+	public String getCodiceIpa(String codiceFiscale, String codiceEnte) throws Exception {
 		ResultSet res = null;
 		String codiceIpa = "";
 		try { 			
-			if (callableStatementGetCodiceIpa == null) {
-				System.out.println("url connection Payer: " + connection.getMetaData().getURL());
-				System.out.println("username connection Payer: " + connection.getMetaData().getUserName());
-				System.out.println("schema Payer: " + schema);
-				if(schema == null) 
-					throw new IllegalArgumentException("In IuvDao::getCodiceIPA schema_payer non valorizzato");
-				System.out.println("pre - prepareCall DB2");
-				callableStatementGetCodiceIpa = Helper.prepareCall(connection, schema, "PYENTSP_SEL_INFO_CIPA");
-				System.out.println("post - prepareCall DB2");
-			}
+			if(schema == null) 
+				throw new IllegalArgumentException("In InviaDovutiDao::getCodiceIPA schema non valorizzato");
 			
-			callableStatementGetCodiceIpa.setString(1, cutecute); // I_ENT_CUTECUTE  "00003"
-			callableStatementGetCodiceIpa.setString(2, codiceEnte); // I_ANE_CANECENT "61501"
+			callableStatementGetCodiceIpa = Helper.prepareCall(connection, schema, "PYENTSP_SEL_INFO_CIPA");
+			callableStatementGetCodiceIpa.setString(1, "AAABBB00A00A123B"); // ENT_CENTCFIS codiceFiscale (idDominio) "AAABBB00A00A123B"
+			callableStatementGetCodiceIpa.setString(2, "61501"); // ANE_CANECENT codiceEnte "61501" 
 			callableStatementGetCodiceIpa.execute();
 			
 			res = callableStatementGetCodiceIpa.getResultSet();		

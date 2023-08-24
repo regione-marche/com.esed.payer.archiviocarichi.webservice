@@ -709,7 +709,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				}
         	}
         	
-        	// SR 10082023 inizio
+        	// SR PGNTACWS-2 inizio
 			// SE ARRIVO QUA, L'INSERIMENTO SU PAGONET E' OK 
         	
 			CaricaDebitiJppa jppa = new CaricaDebitiJppa();
@@ -717,10 +717,10 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			
 			InviaDovutiDao dao = new InviaDovutiDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
 
-			String codiceIpa = "";
-			codiceIpa = dao.getCodiceIpa(in.getCodiceUtente(), in.getCodiceEnte());
+			String codiceIpaComune = "";
+			codiceIpaComune = dao.getCodiceIpa(in.getListTributi(0).getIdentificativoDominio(), in.getCodiceEnte());
 			
-			if (codiceIpa.equals("")) {
+			if (codiceIpaComune.equals("")) {
 				System.err.println("Codice ipa non trovato per utente: " + in.getCodiceUtente() + "ed ente: " + in.getCodiceEnte() + ". Impossibile inviare dovuto.");
 			} else {
 				
@@ -802,18 +802,26 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								bFoundResult = true;
 							}
 						}
-			
+						
+						String codiceIpaProvincia = "";
+						if(pgResponse.getFlagMultiBeneficiario()) {
+							codiceIpaProvincia = dao.getCodiceIpa(in.getListTributi(1).getIdentificativoDominio(), in.getCodiceEnte());
+						}
+						
 						// Se il bollettino è multirata, invio le rate come dovuti separati
 						if (in.getListScadenze().length > 1) {
-							DovutoDto dovuto = new DovutoDto(pgResponse, "EntTest1");
+							DovutoDto dovuto = new DovutoDto(pgResponse);
 							List<DettaglioDovutoDto> dettaglioList = new ArrayList<>();
 							int progressivo = 1;
 
-							for(Scadenza scadenza : in.getListScadenze()) {														
-								
+							for(Scadenza scadenza : in.getListScadenze()) {																						
 								DettaglioDovutoDto dettaglio = new DettaglioDovutoDto();
-								dettaglio.setCausaleDebito(pgResponse.getCausale() + ", rata: " + scadenza.getNumeroRata());   
-								dettaglio.setCodiceIpaCreditore("EntTest1"); // codiceIpa 
+								dettaglio.setCausaleDebito(pgResponse.getCausale() + ", rata " + scadenza.getNumeroRata());   									
+								if(pgResponse.getFlagMultiBeneficiario()) {
+									dettaglio.setCodiceIpaCreditore(progressivo == 1 ? "c_g479" : "p_PU"); // codiceIpaComune : codiceIpaProvincia
+								} else {
+									dettaglio.setCodiceIpaCreditore("EntTest1"); // codiceIpaComune 
+								}
 								dettaglio.setCodiceTipoDebito(CodiceTipoDebitoEnum.TARI); // CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio()) 		
 								dettaglio.setDataInizioValidita(OffsetDateTime.parse(Calendar.getInstance().getTime().toInstant().atOffset(ZoneOffset.UTC).toString(), DateTimeFormatter.ISO_OFFSET_DATE_TIME)); 
 						 		dettaglio.setGruppo("multirata"); 
@@ -824,15 +832,15 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								progressivo++;							
 							}
 							dovuto.setDettaglioDovuto(dettaglioList);
-							jppa.inviaDovuti(token, codiceIpa, dovuto);	
+							jppa.inviaDovuti(token, codiceIpaComune, dovuto);	
 						} 
 						// Se il bollettino è multirata o se è soluzione unica, invio un dovuto con l'importo totale.
-						DovutoDto dovuto = new DovutoDto(pgResponse, "EntTest1", Arrays.asList(in.getListTributi())); 
-						jppa.inviaDovuti(token, codiceIpa, dovuto);
+						DovutoDto dovuto = new DovutoDto(pgResponse, "EntTest1", "", Arrays.asList(in.getListTributi())); 
+						jppa.inviaDovuti(token, codiceIpaComune, dovuto);
 						dao.aggiornaFlagInviaDovuto(progressivoFlussoPerInviaDovuti, getSchemaDifferito(dbSchemaCodSocieta)); 							
 					}
 				}				
-				// SR 10082023 fine
+				// SR PGNTACWS-2 fine
 		}
         } catch (ConfigurazioneException e) {	
 			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC failed, configuration error due to: ", e);

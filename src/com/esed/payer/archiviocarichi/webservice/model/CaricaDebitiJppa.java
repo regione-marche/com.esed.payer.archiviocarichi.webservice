@@ -43,7 +43,7 @@ public class CaricaDebitiJppa {
 
 		DovutiApi apiInstance = new DovutiApi();
 		RichiestaInviaDovutiRestDto richiesta = new RichiestaInviaDovutiRestDto(); // RichiestaInviaDovutiRestDto | richiesta
-		richiesta.setCodiceIPA("EntTest1"); // mettere: codiceIpa
+		richiesta.setCodiceIPA("EntTest1"); // codiceIpa
 		richiesta.setCodiceServizio(CodiceServizioEnum.JTRIB);
 		richiesta.setDovuti(Arrays.asList(dovuto));
 		
