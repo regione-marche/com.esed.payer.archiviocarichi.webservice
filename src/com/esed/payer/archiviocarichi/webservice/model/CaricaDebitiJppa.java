@@ -1,6 +1,6 @@
 package com.esed.payer.archiviocarichi.webservice.model;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import io.swagger.client.ApiClient;
@@ -36,7 +36,7 @@ public class CaricaDebitiJppa {
 		return result != null ? result.getToken() : "";
 	}
 
-	public void inviaDovuti(String token, String codiceIpa, DovutoDto dovuto) {
+	public void inviaDovuti(String token, String codiceIpa, List<DovutoDto> dovutiList) {
 		ApiClient defaultClient = Configuration.getDefaultApiClient();
         ApiKeyAuth jwtToken = (ApiKeyAuth) defaultClient.getAuthentication("jwtToken");
         jwtToken.setApiKey("Bearer " + token);
@@ -45,7 +45,7 @@ public class CaricaDebitiJppa {
 		RichiestaInviaDovutiRestDto richiesta = new RichiestaInviaDovutiRestDto(); // RichiestaInviaDovutiRestDto | richiesta
 		richiesta.setCodiceIPA("EntTest1"); // codiceIpa
 		richiesta.setCodiceServizio(CodiceServizioEnum.JTRIB);
-		richiesta.setDovuti(Arrays.asList(dovuto));
+		richiesta.setDovuti(dovutiList);
 		
 		try {
 		    RispostaInviaDovutiDto result = apiInstance.postInviaDovutiUsingPOST(richiesta);

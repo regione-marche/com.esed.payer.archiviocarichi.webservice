@@ -721,7 +721,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			codiceIpaComune = dao.getCodiceIpa(in.getListTributi(0).getIdentificativoDominio(), in.getCodiceEnte());
 			
 			if (codiceIpaComune.equals("")) {
-				System.err.println("Codice ipa non trovato per utente: " + in.getCodiceUtente() + "ed ente: " + in.getCodiceEnte() + ". Impossibile inviare dovuto.");
+				System.err.println("Codice ipa non trovato per id dominio: " + in.getListTributi(0).getIdentificativoDominio() + "ed ente: " + in.getCodiceEnte() + ". Impossibile inviare dovuto.");
 			} else {
 				
 				this.estrattoContoDao = new EstrattoContoDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
@@ -808,6 +808,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							codiceIpaProvincia = dao.getCodiceIpa(in.getListTributi(1).getIdentificativoDominio(), in.getCodiceEnte());
 						}
 						
+						List<DovutoDto> dovutiList = new ArrayList<>();
+						
 						// Se il bollettino è multirata, invio le rate come dovuti separati
 						if (in.getListScadenze().length > 1) {
 							DovutoDto dovuto = new DovutoDto(pgResponse);
@@ -832,11 +834,13 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								progressivo++;							
 							}
 							dovuto.setDettaglioDovuto(dettaglioList);
-							jppa.inviaDovuti(token, codiceIpaComune, dovuto);	
+							dovutiList.add(dovuto);
 						} 
 						// Se il bollettino è multirata o se è soluzione unica, invio un dovuto con l'importo totale.
 						DovutoDto dovuto = new DovutoDto(pgResponse, "EntTest1", "", Arrays.asList(in.getListTributi())); 
-						jppa.inviaDovuti(token, codiceIpaComune, dovuto);
+						dovutiList.add(dovuto);
+
+						jppa.inviaDovuti(token, codiceIpaComune, dovutiList);
 						dao.aggiornaFlagInviaDovuto(progressivoFlussoPerInviaDovuti, getSchemaDifferito(dbSchemaCodSocieta)); 							
 					}
 				}				
