@@ -116,6 +116,7 @@ import com.seda.payer.facade.dto.ConfigPagamentoDto;
 import com.seda.payer.integraente.webservice.dati.RecuperaDatiBollettinoResponse;
 import com.seda.payer.integraente.webservice.dati.TipoBollettino;
 
+import io.swagger.client.model.DatoAccertamentoDto;
 import io.swagger.client.model.DettaglioDovutoDto;
 import io.swagger.client.model.DettaglioDovutoDto.CodiceTipoDebitoEnum;
 import io.swagger.client.model.DovutoDto;
@@ -144,6 +145,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	private String listXmlDP = null;
 	private String listXmlDC = null;
 	private int progressivoFlussoPerInviaDovuti = 0;
+	private boolean isVariazioneEC = false;
+	private DovutoDto dovutoDaModificare = null;
 	//fine SR 20230308
 	
 	@Override
@@ -804,7 +807,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						}
 						
 						String codiceIpaProvincia = "";
-						if(pgResponse.getFlagMultiBeneficiario()) {
+						if(Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario())) {
 							codiceIpaProvincia = dao.getCodiceIpa(in.getListTributi(1).getIdentificativoDominio(), in.getCodiceEnte());
 						}
 						
@@ -819,7 +822,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							for(Scadenza scadenza : in.getListScadenze()) {																						
 								DettaglioDovutoDto dettaglio = new DettaglioDovutoDto();
 								dettaglio.setCausaleDebito(pgResponse.getCausale() + ", rata " + scadenza.getNumeroRata());   									
-								if(pgResponse.getFlagMultiBeneficiario()) {
+								if(Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario())) {
 									dettaglio.setCodiceIpaCreditore(progressivo == 1 ? "c_g479" : "p_PU"); // codiceIpaComune : codiceIpaProvincia
 								} else {
 									dettaglio.setCodiceIpaCreditore("EntTest1"); // codiceIpaComune 
@@ -830,6 +833,10 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								dettaglio.setIdDeb(scadenza.getIdentificativoUnivocoVersamento()+scadenza.getNumeroRata()); 
 								dettaglio.setImportoDebito(scadenza.getImpBollettinoRata().doubleValue() / 100D);
 								dettaglio.setOrdinamento(progressivo); 
+								DatoAccertamentoDto datoAccertamento = new DatoAccertamentoDto();
+								datoAccertamento.setImportoAccertamento(BigDecimal.valueOf(scadenza.getImpBollettinoRata().doubleValue() / 100D));
+								datoAccertamento.setCodiceAccertamento(CodiceTipoDebitoEnum.MULTE.getValue());
+								dettaglio.setDatiAccertamento(Arrays.asList(datoAccertamento));
 								dettaglioList.add(dettaglio);
 								progressivo++;							
 							}
@@ -839,7 +846,9 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						// Se il bollettino è multirata o se è soluzione unica, invio un dovuto con l'importo totale.
 						DovutoDto dovuto = new DovutoDto(pgResponse, "EntTest1", "", Arrays.asList(in.getListTributi())); 
 						dovutiList.add(dovuto);
-
+						
+						this.dovutoDaModificare = dovuto;
+						
 						jppa.inviaDovuti(token, codiceIpaComune, dovutiList);
 						dao.aggiornaFlagInviaDovuto(progressivoFlussoPerInviaDovuti, getSchemaDifferito(dbSchemaCodSocieta)); 							
 					}
@@ -897,6 +906,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	@SuppressWarnings("unused")
 	//fine LP PG200360
 	public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.VariazioneEcResponse variazioneEC(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.VariazioneEcRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
+		this.isVariazioneEC  = true;
     	ClearVariazioneEC(in); //LP PG22XX05
     	debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - inizio");
     	VariazioneEcResponse response = new VariazioneEcResponse(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), "", "", in.getDocumento());
@@ -1096,7 +1106,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 		    	} else {
 			    	//Prima cancello poi inserisco
 			    	//Attualmente qualora la configurazione preveda la generazione dei codici iuv, nuovi codici iuv sono generati
-		    		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - cancellazione posizione debitoria originaria");
+		    		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - cancellazione posizione debitoria originaria");		    		
 			    	CancellazioneEcRequest cancReq = new CancellazioneEcRequest(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), in.getDocumento().getNumeroDocumento());
 			    	CancellazioneEcResponse cancRes = cancellazioneEC(cancReq);
 			    	if (cancRes.getCodiceEsito().equals("00")) {
@@ -1120,6 +1130,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			    	}
 		    	}
         	}
+        	
+    		this.isVariazioneEC  = false;
     	} catch (ConfigurazioneException e) {	
 			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC failed, configuration error due to: ", e);
 			response.setCodiceEsito("02");
@@ -1230,6 +1242,21 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 		        	if (retMessage.equals("")) {
 						response.setCodiceEsito("00");
 			    		response.setMessaggioEsito("Richiesta eseguita con successo");
+			    		
+			    		CaricaDebitiJppa jppa = new CaricaDebitiJppa();
+						String token = jppa.login(propertiesTree().getProperty(PropKeys.username.format()), propertiesTree().getProperty(PropKeys.password.format()), propertiesTree().getProperty(PropKeys.idEnte.format()));
+						InviaDovutiDao dao = new InviaDovutiDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
+						String codiceIpaComune = "";
+						codiceIpaComune = dao.getCodiceIpa(in.getCodiceUtente(), in.getCodiceEnte());
+						
+			    		if (this.isVariazioneEC) {
+			    			// MODIFICA DOVUTO
+			    			jppa.modificaDovuto(token, codiceIpaComune, dovutoDaModificare);
+			    		} else {
+			    			// CANCELLA DOVUTO
+							jppa.cancellaDovuto(token, codiceIpaComune, in.getNumeroDocumento()); 								
+			    		}
+		    			this.isVariazioneEC  = false;
 		        	} else {
 		        		throw new NotFoundException("Posizione debitoria non presente in archivio");
 		        	}

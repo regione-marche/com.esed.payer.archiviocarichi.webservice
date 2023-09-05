@@ -14,69 +14,71 @@ import com.seda.payer.core.bean.ArchivioCarichiDocumento;
 import com.seda.payer.core.exception.DaoException;
 import com.seda.payer.core.handler.BaseDaoHandler;
 
-public class InviaDovutiDao  extends BaseDaoHandler {
-	
+public class InviaDovutiDao extends BaseDaoHandler {
+
 	private Connection connection;
 	private String schema = null;
-	
+
 	protected CallableStatement callableStatementGetCodiceIpa = null;
 	protected CallableStatement callableStatementFlagDovutoInviato = null;
 	protected CallableStatement callableStatementGetDocumento = null;
-	
+
 	public InviaDovutiDao(Connection connection, String schema) {
 		super(connection, schema);
 		this.connection = connection;
 		this.schema = schema;
 	}
-	
-	public String getCodiceIpa(String codiceFiscale, String codiceEnte) throws Exception {
+
+	public String getCodiceIpa(String primoArg, String codiceEnte) throws Exception {
 		ResultSet res = null;
 		String codiceIpa = "";
-		try { 			
-			if(schema == null) 
-				throw new IllegalArgumentException("In InviaDovutiDao::getCodiceIPA schema non valorizzato");
-			
-			callableStatementGetCodiceIpa = Helper.prepareCall(connection, schema, "PYENTSP_SEL_INFO_CIPA");
-			callableStatementGetCodiceIpa.setString(1, "AAABBB00A00A123B"); // ENT_CENTCFIS codiceFiscale (idDominio) "AAABBB00A00A123B"
-			callableStatementGetCodiceIpa.setString(2, "61501"); // ANE_CANECENT codiceEnte "61501" 
-			callableStatementGetCodiceIpa.execute();
-			
-			res = callableStatementGetCodiceIpa.getResultSet();		
-			if (res.next()){
-				codiceIpa = res.getString("ENT_CENTMYCO");							
+
+		try {
+			if (primoArg.length() <= 5) {
+				// è un codice utente
+				callableStatementGetCodiceIpa = Helper.prepareCall(connection, schema, "PYENTSP_SEL_INFO_CIPA2");
+				callableStatementGetCodiceIpa.setString(1, "000TO"); // ENT_CUTECUTE primoArg (cute cute) "000TO"
+				callableStatementGetCodiceIpa.setString(2, "61501"); // ANE_CANECENT codiceEnte "61501"
+				callableStatementGetCodiceIpa.execute();
+				res = callableStatementGetCodiceIpa.getResultSet();
+				if (res.next()) {
+					codiceIpa = res.getString("ENT_CENTMYCO");
+				}
+			} else {
+				// è un codice fiscale
+				callableStatementGetCodiceIpa = Helper.prepareCall(connection, schema, "PYENTSP_SEL_INFO_CIPA");
+				callableStatementGetCodiceIpa.setString(1, "AAABBB00A00A123B"); // ENT_CENTCFIS primoArg (idDominio)																			// "AAABBB00A00A123B"
+				callableStatementGetCodiceIpa.setString(2, "61501"); // ANE_CANECENT codiceEnte "61501"
+				callableStatementGetCodiceIpa.execute();
+				res = callableStatementGetCodiceIpa.getResultSet();
+				if (res.next()) {
+					codiceIpa = res.getString("ENT_CENTMYCO");
+				}
 			}
-			 return codiceIpa;
-		} catch (SQLException e) {
-				throw new Exception(e);
-		 } catch (IllegalArgumentException e) {
-			throw new Exception(e);
-		 } catch (HelperException e) {
-			throw new Exception(e);
-		 } finally {
-			 if (callableStatementGetCodiceIpa != null) {
+			return codiceIpa;
+
+		} catch (SQLException x) {
+			throw new Exception(x);
+		} catch (IllegalArgumentException x) {
+			throw new Exception(x);
+		} catch (HelperException x) {
+			throw new Exception(x);
+		} finally {
+			if (callableStatementFlagDovutoInviato != null) {
 				try {
-					callableStatementGetCodiceIpa.close();
+					callableStatementFlagDovutoInviato.close();
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
-			}	
-		 }
-
+			}
+		}
 	}
 
 	public void aggiornaFlagInviaDovuto(int progressivoFlusso, String schema) throws Exception {
 		try {
-			if (callableStatementFlagDovutoInviato == null) {
-				System.out.println("url connection: " + connection.getMetaData().getURL());
-				System.out.println("username connection: " + connection.getMetaData().getUserName());
-				System.out.println("schema: " + schema);
-				System.out.println("pre - prepareCall");
-				callableStatementFlagDovutoInviato = Helper.prepareCall(connection, schema,
-						"PYEH0SP_UPD_INV");
-			}
-
+			callableStatementFlagDovutoInviato = Helper.prepareCall(connection, schema, "PYEH0SP_UPD_INV");
 			callableStatementFlagDovutoInviato.setInt(1, progressivoFlusso);
-			callableStatementFlagDovutoInviato.setString(2, "Y"); 
+			callableStatementFlagDovutoInviato.setString(2, "Y");
 			callableStatementFlagDovutoInviato.execute();
 		} catch (SQLException x) {
 			throw new Exception(x);
@@ -91,14 +93,14 @@ public class InviaDovutiDao  extends BaseDaoHandler {
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
-			}	
+			}
 		}
 	}
-	
+
 	public List<ArchivioCarichiDocumento> getDocumento(ArchivioCarichiDocumento in) throws DaoException {
 		List<ArchivioCarichiDocumento> listaDocumenti = new ArrayList<>();
-		try	{		
-			
+		try {
+
 			connection.setAutoCommit(true);
 			callableStatementGetDocumento = Helper.prepareCall(connection, schema, "PYEH1SP");
 			callableStatementGetDocumento.setString(1, in.getCodiceUtente());
@@ -119,7 +121,7 @@ public class InviaDovutiDao  extends BaseDaoHandler {
 
 			if (callableStatementGetDocumento.execute()) {
 				ResultSet rs = callableStatementGetDocumento.getResultSet();
-				while(rs.next()){ 
+				while (rs.next()) {
 					ArchivioCarichiDocumento doc = new ArchivioCarichiDocumento();
 					doc.setCodiceUtente(rs.getString(1));
 					doc.setCodiceEnte(rs.getString(2));
@@ -128,7 +130,7 @@ public class InviaDovutiDao  extends BaseDaoHandler {
 					doc.setTipoServizio(rs.getString(5));
 					doc.setImpostaServizio(rs.getString(6));
 					doc.setNumeroDocumento(rs.getString(7));
-					doc.setNumeroBollettinoPagoPA(rs.getString(8));						
+					doc.setNumeroBollettinoPagoPA(rs.getString(8));
 					doc.setImpBollettinoTotaleDocumento(rs.getBigDecimal(10));
 					doc.setIbanAccredito(rs.getString(11));
 					doc.setIbanAppoggio(rs.getString(12));

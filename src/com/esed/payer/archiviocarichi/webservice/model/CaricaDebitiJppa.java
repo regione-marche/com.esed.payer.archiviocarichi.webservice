@@ -12,9 +12,16 @@ import io.swagger.client.auth.ApiKeyAuth;
 import io.swagger.client.model.DovutoDto;
 import io.swagger.client.model.JppaLoginRequest;
 import io.swagger.client.model.JppaLoginResponse;
+import io.swagger.client.model.NumeroAvvisoDto;
+import io.swagger.client.model.RichiestaCancellaDovutiDto;
+import io.swagger.client.model.RichiestaCancellaDovutiDto.CodiceMotivoEliminazioneEnum;
 import io.swagger.client.model.RichiestaInviaDovutiRestDto;
 import io.swagger.client.model.RichiestaInviaDovutiRestDto.CodiceServizioEnum;
+import io.swagger.client.model.RichiestaModificaDovutiDto;
+import io.swagger.client.model.RichiestaModificaDovutiDto.OperazioneEnum;
+import io.swagger.client.model.RispostaEliminaAvvisoPagamentoDto;
 import io.swagger.client.model.RispostaInviaDovutiDto;
+import io.swagger.client.model.RispostaModificaDovutiDto;
 
 public class CaricaDebitiJppa {
 		
@@ -52,6 +59,59 @@ public class CaricaDebitiJppa {
 		    System.out.println(result);
 		} catch (ApiException e) {
 		    System.err.println("Exception when calling DovutiApi#postInviaDovutiUsingPOST");
+		    e.printStackTrace();
+		}
+
+	}
+	
+	public void cancellaDovuto(String token, String codiceIpa, String numeroAvviso) {
+		ApiClient defaultClient = Configuration.getDefaultApiClient();
+        ApiKeyAuth jwtToken = (ApiKeyAuth) defaultClient.getAuthentication("jwtToken");
+        jwtToken.setApiKey("Bearer " + token);
+        
+		DovutiApi apiInstance = new DovutiApi();
+		RichiestaCancellaDovutiDto richiesta = new RichiestaCancellaDovutiDto(); // RichiestaCancellaDovutiDto | richiesta
+		richiesta.setCodiceIPA("EntTest1"); // codiceIpa
+		richiesta.setCodiceMotivoEliminazione(CodiceMotivoEliminazioneEnum.ELIMINAZIONE_DEBITO);
+		richiesta.setCodiceServizio(CodiceServizioEnum.JTRIB.toString());
+		richiesta.setDescrizioneMotivoEliminazione(CodiceMotivoEliminazioneEnum.ELIMINAZIONE_DEBITO.getValue());
+		
+		NumeroAvvisoDto numeroAvvisoDto = new NumeroAvvisoDto();
+		numeroAvvisoDto.setVersioneNumeroAvviso(0);
+		
+		// Dopo InviaDovuti, controllo il numero avviso generato da jppa sul cruscotto e lo uso per testare la CancellaDovuto			
+		numeroAvvisoDto.setNumeroAvviso("004040400002466441"); // numeroAvviso 
+		numeroAvvisoDto.setFlagAttivaDebito(true);
+		
+		richiesta.setNumeroAvviso(numeroAvvisoDto);
+		
+		try {
+		    RispostaEliminaAvvisoPagamentoDto result = apiInstance.deleteCancellaUsingDELETE(richiesta);
+		    System.out.println(result);
+		} catch (ApiException e) {
+		    System.err.println("Exception when calling DovutiApi#deleteCancellaUsingDELETE");
+		    e.printStackTrace();
+		}
+
+	}
+
+	public void modificaDovuto(String token, String codiceIpaComune, DovutoDto dovutoDaModificare) {
+		ApiClient defaultClient = Configuration.getDefaultApiClient();
+        ApiKeyAuth jwtToken = (ApiKeyAuth) defaultClient.getAuthentication("jwtToken");
+        jwtToken.setApiKey("Bearer " + token);
+        
+		DovutiApi apiInstance = new DovutiApi();
+		RichiestaModificaDovutiDto richiestaModifica = new RichiestaModificaDovutiDto(); // RichiestaModificaDovutiDto | richiestaModifica
+		richiestaModifica.setCodiceIPA("EntTest1"); // codiceIpa
+		richiestaModifica.setCodiceServizio(CodiceServizioEnum.JTRIB.toString());
+		richiestaModifica.setDovutoDto(dovutoDaModificare);
+		richiestaModifica.setOperazione(OperazioneEnum.ALL);
+		
+		try {
+		    RispostaModificaDovutiDto result = apiInstance.patchModificaUsingPATCH(richiestaModifica);
+		    System.out.println(result);
+		} catch (ApiException e) {
+		    System.err.println("Exception when calling DovutiApi#patchModificaUsingPATCH");
 		    e.printStackTrace();
 		}
 
