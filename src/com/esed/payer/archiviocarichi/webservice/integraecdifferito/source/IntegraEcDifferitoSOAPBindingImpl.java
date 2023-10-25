@@ -825,9 +825,9 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								if(Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario())) {
 									dettaglio.setCodiceIpaCreditore(progressivo == 1 ? "c_g479" : "p_PU"); // codiceIpaComune : codiceIpaProvincia
 								} else {
-									dettaglio.setCodiceIpaCreditore("EntTest1"); // codiceIpaComune 
+									dettaglio.setCodiceIpaCreditore("c_b240"); // codiceIpaComune 
 								}
-								dettaglio.setCodiceTipoDebito(CodiceTipoDebitoEnum.TARI); // CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio()) 		
+								dettaglio.setCodiceTipoDebito(CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio())); // 	CodiceTipoDebitoEnum.TARI	
 								dettaglio.setDataInizioValidita(OffsetDateTime.parse(Calendar.getInstance().getTime().toInstant().atOffset(ZoneOffset.UTC).toString(), DateTimeFormatter.ISO_OFFSET_DATE_TIME)); 
 						 		dettaglio.setGruppo("multirata"); 
 								dettaglio.setIdDeb(scadenza.getIdentificativoUnivocoVersamento()+scadenza.getNumeroRata()); 
@@ -835,7 +835,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								dettaglio.setOrdinamento(progressivo); 
 								DatoAccertamentoDto datoAccertamento = new DatoAccertamentoDto();
 								datoAccertamento.setImportoAccertamento(BigDecimal.valueOf(scadenza.getImpBollettinoRata().doubleValue() / 100D));
-								datoAccertamento.setCodiceAccertamento(CodiceTipoDebitoEnum.MULTE.getValue());
+								datoAccertamento.setCodiceAccertamento(CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio()).getValue()); // CodiceTipoDebitoEnum.MULTE.getValue() 	
 								dettaglio.setDatiAccertamento(Arrays.asList(datoAccertamento));
 								dettaglioList.add(dettaglio);
 								progressivo++;							
@@ -844,12 +844,12 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							dovutiList.add(dovuto);
 						} 
 						// Se il bollettino è multirata o se è soluzione unica, invio un dovuto con l'importo totale.
-						DovutoDto dovuto = new DovutoDto(pgResponse, "EntTest1", "", Arrays.asList(in.getListTributi())); 
+						DovutoDto dovuto = new DovutoDto(pgResponse, "c_b240", "", Arrays.asList(in.getListTributi())); 
 						dovutiList.add(dovuto);
 						
 						this.dovutoDaModificare = dovuto;
 						
-						jppa.inviaDovuti(token, codiceIpaComune, dovutiList);
+						jppa.inviaDovuti(token, "c_b240", dovutiList); // codiceIpaComune
 						dao.aggiornaFlagInviaDovuto(progressivoFlussoPerInviaDovuti, getSchemaDifferito(dbSchemaCodSocieta)); 							
 					}
 				}				

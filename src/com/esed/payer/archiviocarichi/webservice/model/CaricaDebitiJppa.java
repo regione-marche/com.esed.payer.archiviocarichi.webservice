@@ -50,8 +50,8 @@ public class CaricaDebitiJppa {
 
 		DovutiApi apiInstance = new DovutiApi();
 		RichiestaInviaDovutiRestDto richiesta = new RichiestaInviaDovutiRestDto(); // RichiestaInviaDovutiRestDto | richiesta
-		richiesta.setCodiceIPA("EntTest1"); // codiceIpa
-		richiesta.setCodiceServizio(CodiceServizioEnum.JTRIB);
+		richiesta.setCodiceIPA(codiceIpa); 
+		richiesta.setCodiceServizio(CodiceServizioEnum.PAGONET);
 		richiesta.setDovuti(dovutiList);
 		
 		try {
@@ -71,16 +71,15 @@ public class CaricaDebitiJppa {
         
 		DovutiApi apiInstance = new DovutiApi();
 		RichiestaCancellaDovutiDto richiesta = new RichiestaCancellaDovutiDto(); // RichiestaCancellaDovutiDto | richiesta
-		richiesta.setCodiceIPA("EntTest1"); // codiceIpa
+		richiesta.setCodiceIPA(codiceIpa); 
 		richiesta.setCodiceMotivoEliminazione(CodiceMotivoEliminazioneEnum.ELIMINAZIONE_DEBITO);
-		richiesta.setCodiceServizio(CodiceServizioEnum.JTRIB.toString());
+		richiesta.setCodiceServizio(CodiceServizioEnum.PAGONET.toString());
 		richiesta.setDescrizioneMotivoEliminazione(CodiceMotivoEliminazioneEnum.ELIMINAZIONE_DEBITO.getValue());
 		
 		NumeroAvvisoDto numeroAvvisoDto = new NumeroAvvisoDto();
 		numeroAvvisoDto.setVersioneNumeroAvviso(0);
 		
-		// Dopo InviaDovuti, controllo il numero avviso generato da jppa sul cruscotto e lo uso per testare la CancellaDovuto			
-		numeroAvvisoDto.setNumeroAvviso("004040400002466441"); // numeroAvviso 
+		numeroAvvisoDto.setNumeroAvviso(numeroAvviso); 
 		numeroAvvisoDto.setFlagAttivaDebito(true);
 		
 		richiesta.setNumeroAvviso(numeroAvvisoDto);
@@ -102,8 +101,8 @@ public class CaricaDebitiJppa {
         
 		DovutiApi apiInstance = new DovutiApi();
 		RichiestaModificaDovutiDto richiestaModifica = new RichiestaModificaDovutiDto(); // RichiestaModificaDovutiDto | richiestaModifica
-		richiestaModifica.setCodiceIPA("EntTest1"); // codiceIpa
-		richiestaModifica.setCodiceServizio(CodiceServizioEnum.JTRIB.toString());
+		richiestaModifica.setCodiceIPA(codiceIpaComune); 
+		richiestaModifica.setCodiceServizio(CodiceServizioEnum.PAGONET.toString());
 		richiestaModifica.setDovutoDto(dovutoDaModificare);
 		richiestaModifica.setOperazione(OperazioneEnum.ALL);
 		

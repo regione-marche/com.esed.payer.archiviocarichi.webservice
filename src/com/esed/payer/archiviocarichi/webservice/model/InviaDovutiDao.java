@@ -37,8 +37,8 @@ public class InviaDovutiDao extends BaseDaoHandler {
 			if (primoArg.length() <= 5) {
 				// è un codice utente
 				callableStatementGetCodiceIpa = Helper.prepareCall(connection, schema, "PYENTSP_SEL_INFO_CIPA2");
-				callableStatementGetCodiceIpa.setString(1, "000TO"); // ENT_CUTECUTE primoArg (cute cute) "000TO"
-				callableStatementGetCodiceIpa.setString(2, "61501"); // ANE_CANECENT codiceEnte "61501"
+				callableStatementGetCodiceIpa.setString(1, primoArg); // ENT_CUTECUTE (cute cute)
+				callableStatementGetCodiceIpa.setString(2, codiceEnte); // ANE_CANECENT
 				callableStatementGetCodiceIpa.execute();
 				res = callableStatementGetCodiceIpa.getResultSet();
 				if (res.next()) {
@@ -47,8 +47,8 @@ public class InviaDovutiDao extends BaseDaoHandler {
 			} else {
 				// è un codice fiscale
 				callableStatementGetCodiceIpa = Helper.prepareCall(connection, schema, "PYENTSP_SEL_INFO_CIPA");
-				callableStatementGetCodiceIpa.setString(1, "AAABBB00A00A123B"); // ENT_CENTCFIS primoArg (idDominio)																			// "AAABBB00A00A123B"
-				callableStatementGetCodiceIpa.setString(2, "61501"); // ANE_CANECENT codiceEnte "61501"
+				callableStatementGetCodiceIpa.setString(1, primoArg); // ENT_CENTCFIS (idDominio)																		// "AAABBB00A00A123B"
+				callableStatementGetCodiceIpa.setString(2, codiceEnte); // ANE_CANECENT
 				callableStatementGetCodiceIpa.execute();
 				res = callableStatementGetCodiceIpa.getResultSet();
 				if (res.next()) {
@@ -101,24 +101,27 @@ public class InviaDovutiDao extends BaseDaoHandler {
 		List<ArchivioCarichiDocumento> listaDocumenti = new ArrayList<>();
 		try {
 
-			connection.setAutoCommit(true);
-			callableStatementGetDocumento = Helper.prepareCall(connection, schema, "PYEH1SP");
-			callableStatementGetDocumento.setString(1, in.getCodiceUtente());
-			callableStatementGetDocumento.setString(2, in.getCodiceEnte());
-			callableStatementGetDocumento.setString(3, "");
-			callableStatementGetDocumento.setString(4, "");
-			callableStatementGetDocumento.setString(5, "");
-			callableStatementGetDocumento.setString(6, in.getTipoServizio());
-			callableStatementGetDocumento.setString(7, "");
-			callableStatementGetDocumento.setString(8, "");
-			callableStatementGetDocumento.setString(9, "");
-			callableStatementGetDocumento.setString(10, in.getNumeroDocumento());
-			callableStatementGetDocumento.setString(11, "");
-			callableStatementGetDocumento.setString(12, "");
-			callableStatementGetDocumento.setString(13, "");
-			callableStatementGetDocumento.registerOutParameter(14, Types.CHAR);
-			callableStatementGetDocumento.registerOutParameter(15, Types.VARCHAR);
-
+			connection.setAutoCommit(true);				
+			callableStatementGetDocumento = Helper.prepareCall(connection, schema, "PYEH1SP");	
+			
+			if(in != null) {
+				callableStatementGetDocumento.setString(1, in.getCodiceUtente());
+				callableStatementGetDocumento.setString(2, in.getCodiceEnte());
+				callableStatementGetDocumento.setString(3, "");
+				callableStatementGetDocumento.setString(4, "");
+				callableStatementGetDocumento.setString(5, "");
+				callableStatementGetDocumento.setString(6, in.getTipoServizio());
+				callableStatementGetDocumento.setString(7, "");
+				callableStatementGetDocumento.setString(8, "");
+				callableStatementGetDocumento.setString(9, "");
+				callableStatementGetDocumento.setString(10, in.getNumeroDocumento());
+				callableStatementGetDocumento.setString(11, "");
+				callableStatementGetDocumento.setString(12, "");
+				callableStatementGetDocumento.setString(13, "");
+				callableStatementGetDocumento.registerOutParameter(14, Types.CHAR);
+				callableStatementGetDocumento.registerOutParameter(15, Types.VARCHAR);
+			}
+			
 			if (callableStatementGetDocumento.execute()) {
 				ResultSet rs = callableStatementGetDocumento.getResultSet();
 				while (rs.next()) {
