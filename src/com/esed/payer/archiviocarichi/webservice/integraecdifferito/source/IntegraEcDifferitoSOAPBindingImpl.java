@@ -714,14 +714,12 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
         	
         	// SR PGNTACWS-2 inizio
 			// SE ARRIVO QUA, L'INSERIMENTO SU PAGONET E' OK 
-        	
-			CaricaDebitiJppa jppa = new CaricaDebitiJppa();
-			String token = jppa.login(propertiesTree().getProperty(PropKeys.username.format()), propertiesTree().getProperty(PropKeys.password.format()), propertiesTree().getProperty(PropKeys.idEnte.format()));
-			
-			InviaDovutiDao dao = new InviaDovutiDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
-
+        	InviaDovutiDao dao = new InviaDovutiDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
 			String codiceIpaComune = "";
 			codiceIpaComune = dao.getCodiceIpa(in.getListTributi(0).getIdentificativoDominio(), in.getCodiceEnte());
+			
+			CaricaDebitiJppa jppa = new CaricaDebitiJppa();
+			String token = jppa.login(propertiesTree().getProperty(PropKeys.username.format()), propertiesTree().getProperty(PropKeys.password.format()), codiceIpaComune);
 			
 			if (codiceIpaComune.equals("")) {
 				System.err.println("Codice ipa non trovato per id dominio: " + in.getListTributi(0).getIdentificativoDominio() + "ed ente: " + in.getCodiceEnte() + ". Impossibile inviare dovuto.");
@@ -823,11 +821,11 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								DettaglioDovutoDto dettaglio = new DettaglioDovutoDto();
 								dettaglio.setCausaleDebito(pgResponse.getCausale() + ", rata " + scadenza.getNumeroRata());   									
 								if(Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario())) {
-									dettaglio.setCodiceIpaCreditore(progressivo == 1 ? "c_g479" : "p_PU"); // codiceIpaComune : codiceIpaProvincia
+									dettaglio.setCodiceIpaCreditore(progressivo == 1 ? codiceIpaComune : codiceIpaProvincia); 
 								} else {
-									dettaglio.setCodiceIpaCreditore("c_b240"); // codiceIpaComune 
+									dettaglio.setCodiceIpaCreditore(codiceIpaComune); 
 								}
-								dettaglio.setCodiceTipoDebito(CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio())); // 	CodiceTipoDebitoEnum.TARI	
+								dettaglio.setCodiceTipoDebito(CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio())); 
 								dettaglio.setDataInizioValidita(OffsetDateTime.parse(Calendar.getInstance().getTime().toInstant().atOffset(ZoneOffset.UTC).toString(), DateTimeFormatter.ISO_OFFSET_DATE_TIME)); 
 						 		dettaglio.setGruppo("multirata"); 
 								dettaglio.setIdDeb(scadenza.getIdentificativoUnivocoVersamento()+scadenza.getNumeroRata()); 
@@ -844,12 +842,12 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							dovutiList.add(dovuto);
 						} 
 						// Se il bollettino è multirata o se è soluzione unica, invio un dovuto con l'importo totale.
-						DovutoDto dovuto = new DovutoDto(pgResponse, "c_b240", "", Arrays.asList(in.getListTributi())); 
+						DovutoDto dovuto = new DovutoDto(pgResponse, codiceIpaComune, "", Arrays.asList(in.getListTributi())); 
 						dovutiList.add(dovuto);
 						
 						this.dovutoDaModificare = dovuto;
 						
-						jppa.inviaDovuti(token, "c_b240", dovutiList); // codiceIpaComune
+						jppa.inviaDovuti(token, codiceIpaComune, dovutiList); // codiceIpaComune
 						dao.aggiornaFlagInviaDovuto(progressivoFlussoPerInviaDovuti, getSchemaDifferito(dbSchemaCodSocieta)); 							
 					}
 				}				
