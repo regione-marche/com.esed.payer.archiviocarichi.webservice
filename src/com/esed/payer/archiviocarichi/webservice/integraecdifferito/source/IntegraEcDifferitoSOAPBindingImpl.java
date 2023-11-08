@@ -763,7 +763,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 									in.getTipoUfficio(), 
 									in.getCodiceUfficio(), 
 									"", 
-									"", // tipologiaServizio  VERIFICA COSA METTERE
+									in.getRuolo().getCodiceTipologiaServizio(),
 									ecCached.getString(9), 
 									ecCached.getString(21), 
 									ecCached.getBigDecimal(47) == null ? 0 : ecCached.getBigDecimal(47).multiply(new BigDecimal(100)).longValue(), 
@@ -842,7 +842,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							dovutiList.add(dovuto);
 						} 
 						// Se il bollettino è multirata o se è soluzione unica, invio un dovuto con l'importo totale.
-						DovutoDto dovuto = new DovutoDto(pgResponse, codiceIpaComune, "", Arrays.asList(in.getListTributi())); 
+						DovutoDto dovuto = new DovutoDto(pgResponse, codiceIpaComune, codiceIpaProvincia, Arrays.asList(in.getListTributi())); 
 						dovutiList.add(dovuto);
 						
 						this.dovutoDaModificare = dovuto;
