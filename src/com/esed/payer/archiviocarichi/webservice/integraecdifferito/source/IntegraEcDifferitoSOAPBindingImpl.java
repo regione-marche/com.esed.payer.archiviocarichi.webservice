@@ -120,6 +120,7 @@ import io.swagger.client.model.DatoAccertamentoDto;
 import io.swagger.client.model.DettaglioDovutoDto;
 import io.swagger.client.model.DettaglioDovutoDto.CodiceTipoDebitoEnum;
 import io.swagger.client.model.DovutoDto;
+import io.swagger.client.model.RispostaInviaDovutiDto;
 //inizio LP - mail Giorgia 20200608
 //import com.esed.payer.archiviocarichi.webservice.util.geos.WSRest_GEOS;
 //fine LP - mail Giorgia 20200608
@@ -813,7 +814,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						
 						// Se il bollettino è multirata, invio le rate come dovuti separati
 						if (in.getListScadenze().length > 1) {
-							DovutoDto dovuto = new DovutoDto(pgResponse);
+							DovutoDto dovuto = new DovutoDto(pgResponse, anagrafica);
 							List<DettaglioDovutoDto> dettaglioList = new ArrayList<>();
 							int progressivo = 1;
 
@@ -842,13 +843,15 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							dovutiList.add(dovuto);
 						} 
 						// Se il bollettino è multirata o se è soluzione unica, invio un dovuto con l'importo totale.
-						DovutoDto dovuto = new DovutoDto(pgResponse, codiceIpaComune, codiceIpaProvincia, Arrays.asList(in.getListTributi())); 
+						DovutoDto dovuto = new DovutoDto(pgResponse, codiceIpaComune, codiceIpaProvincia, Arrays.asList(in.getListTributi()), in.getAnagrafica()); 
 						dovutiList.add(dovuto);
 						
 						this.dovutoDaModificare = dovuto;
 						
-						jppa.inviaDovuti(token, codiceIpaComune, dovutiList); // codiceIpaComune
-						dao.aggiornaFlagInviaDovuto(progressivoFlussoPerInviaDovuti, getSchemaDifferito(dbSchemaCodSocieta)); 							
+						RispostaInviaDovutiDto res = jppa.inviaDovuti(token, codiceIpaComune, dovutiList); // codiceIpaComune
+						if(res != null) {
+							dao.aggiornaFlagInviaDovuto(progressivoFlussoPerInviaDovuti, getSchemaDifferito(dbSchemaCodSocieta)); 							
+						}
 					}
 				}				
 				// SR PGNTACWS-2 fine

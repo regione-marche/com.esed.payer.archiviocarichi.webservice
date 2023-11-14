@@ -43,7 +43,8 @@ public class CaricaDebitiJppa {
 		return result != null ? result.getToken() : "";
 	}
 
-	public void inviaDovuti(String token, String codiceIpa, List<DovutoDto> dovutiList) {
+	public RispostaInviaDovutiDto inviaDovuti(String token, String codiceIpa, List<DovutoDto> dovutiList) {
+		RispostaInviaDovutiDto result = null;
 		ApiClient defaultClient = Configuration.getDefaultApiClient();
         ApiKeyAuth jwtToken = (ApiKeyAuth) defaultClient.getAuthentication("jwtToken");
         jwtToken.setApiKey("Bearer " + token);
@@ -55,13 +56,13 @@ public class CaricaDebitiJppa {
 		richiesta.setDovuti(dovutiList);
 		
 		try {
-		    RispostaInviaDovutiDto result = apiInstance.postInviaDovutiUsingPOST(richiesta);
+		    result = apiInstance.postInviaDovutiUsingPOST(richiesta);
 		    System.out.println(result);
 		} catch (ApiException e) {
 		    System.err.println("Exception when calling DovutiApi#postInviaDovutiUsingPOST");
 		    e.printStackTrace();
 		}
-
+		return result;
 	}
 	
 	public void cancellaDovuto(String token, String codiceIpa, String numeroAvviso) {
