@@ -715,147 +715,149 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
         	
         	// SR PGNTACWS-2 inizio
 			// SE ARRIVO QUA, L'INSERIMENTO SU PAGONET E' OK 
-        	InviaDovutiDao dao = new InviaDovutiDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
-			String codiceIpaComune = "";
-			codiceIpaComune = dao.getCodiceIpa(in.getListTributi(0).getIdentificativoDominio(), in.getCodiceEnte());
-			
-			CaricaDebitiJppa jppa = new CaricaDebitiJppa();
-			String token = jppa.login(propertiesTree().getProperty(PropKeys.username.format()), propertiesTree().getProperty(PropKeys.password.format()), codiceIpaComune);
-			
-			if (codiceIpaComune.equals("")) {
-				System.err.println("Codice ipa non trovato per id dominio: " + in.getListTributi(0).getIdentificativoDominio() + "ed ente: " + in.getCodiceEnte() + ". Impossibile inviare dovuto.");
-			} else {
-				
-				this.estrattoContoDao = new EstrattoContoDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
-	
-				String listXml = "";		
-				String[] sEsito = estrattoContoDao.doCachedRowSetList(in.getCodiceUtente(), in.getCodiceEnte(), "", "",
-						in.getAnagrafica().getCodiceFiscale(), in.getTipoServizio(), "I", "", "", in.getDocumento().getNumeroDocumento(), "", "D", "", "",
-						BigDecimal.ZERO, "", "", "", "", BigDecimal.ZERO, "",
-						BigDecimal.ZERO, "", "");
-				
-				listXml = estrattoContoDao.getWebRowSetXml(EstrattoContoDao.IDX_DOLIST_LISTA);
-				if (listXml.length() != 0) {
-					ecCached = Convert.stringToWebRowSet(listXml);
-					if (ecCached.size() > 0) {
-						boolean bFoundResult = false;
-						while (ecCached.next() && !bFoundResult) {
-							String cittaEstesa = ecCached.getString(53)
-									+ (ecCached.getString(53) != null && ecCached.getString(53).trim().length() > 0 ? " " : "")
-									+ ecCached.getString(52)
-									+ (ecCached.getString(54) != null && ecCached.getString(54).trim().length() > 0 ? " (" + ecCached.getString(54) + ")" : "");
-							TipoBollettino tipoBollettino = new TipoBollettino(
-									"", 
-									ecCached.getString(10), 
-									ecCached.getString(11), 
-									"", 
-									"00010101",
-									ecCached.getString(22), 
-									ecCached.getString(5), 
-									ecCached.getString(51), 
-									cittaEstesa, 
-									"",
-									ecCached.getString(48), 
-									null, null);
+        	if(propertiesTree().getProperty(PropKeys.servizioJppa.format()) != null && propertiesTree().getProperty(PropKeys.servizioJppa.format()).equals("Y")) {
+        		InviaDovutiDao dao = new InviaDovutiDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
+    			String codiceIpaComune = "";
+    			codiceIpaComune = dao.getCodiceIpa(in.getListTributi(0).getIdentificativoDominio(), in.getCodiceEnte());
+    			
+    			CaricaDebitiJppa jppa = new CaricaDebitiJppa();
+    			String token = jppa.login(propertiesTree().getProperty(PropKeys.username.format()), propertiesTree().getProperty(PropKeys.password.format()), codiceIpaComune);
+    			
+    			if (codiceIpaComune.equals("")) {
+    				System.err.println("Codice ipa non trovato per id dominio: " + in.getListTributi(0).getIdentificativoDominio() + "ed ente: " + in.getCodiceEnte() + ". Impossibile inviare dovuto.");
+    			} else {
+    				
+    				this.estrattoContoDao = new EstrattoContoDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
+    	
+    				String listXml = "";		
+    				String[] sEsito = estrattoContoDao.doCachedRowSetList(in.getCodiceUtente(), in.getCodiceEnte(), "", "",
+    						in.getAnagrafica().getCodiceFiscale(), in.getTipoServizio(), "I", "", "", in.getDocumento().getNumeroDocumento(), "", "D", "", "",
+    						BigDecimal.ZERO, "", "", "", "", BigDecimal.ZERO, "",
+    						BigDecimal.ZERO, "", "");
+    				
+    				listXml = estrattoContoDao.getWebRowSetXml(EstrattoContoDao.IDX_DOLIST_LISTA);
+    				if (listXml.length() != 0) {
+    					ecCached = Convert.stringToWebRowSet(listXml);
+    					if (ecCached.size() > 0) {
+    						boolean bFoundResult = false;
+    						while (ecCached.next() && !bFoundResult) {
+    							String cittaEstesa = ecCached.getString(53)
+    									+ (ecCached.getString(53) != null && ecCached.getString(53).trim().length() > 0 ? " " : "")
+    									+ ecCached.getString(52)
+    									+ (ecCached.getString(54) != null && ecCached.getString(54).trim().length() > 0 ? " (" + ecCached.getString(54) + ")" : "");
+    							TipoBollettino tipoBollettino = new TipoBollettino(
+    									"", 
+    									ecCached.getString(10), 
+    									ecCached.getString(11), 
+    									"", 
+    									"00010101",
+    									ecCached.getString(22), 
+    									ecCached.getString(5), 
+    									ecCached.getString(51), 
+    									cittaEstesa, 
+    									"",
+    									ecCached.getString(48), 
+    									null, null);
 
-							pgResponse = new RecuperaDatiBollettinoResponse(
-									in.getCodiceUtente(), 
-									in.getCodiceEnte(),
-									in.getTipoUfficio(), 
-									in.getCodiceUfficio(), 
-									"", 
-									in.getRuolo().getCodiceTipologiaServizio(),
-									ecCached.getString(9), 
-									ecCached.getString(21), 
-									ecCached.getBigDecimal(47) == null ? 0 : ecCached.getBigDecimal(47).multiply(new BigDecimal(100)).longValue(), 
-									"",
-									"",
-									0, 
-									"",
-									0, 
-									"",
-									getCurrentDate(), 
-									isValidResult(sEsito) ? "00" : "01", 
-									sEsito[1], 
-									tipoBollettino, 
-									in.getDocumento().getIdentificativoUnivocoVersamento(),
-									ecCached.getString(50));
+    							pgResponse = new RecuperaDatiBollettinoResponse(
+    									in.getCodiceUtente(), 
+    									in.getCodiceEnte(),
+    									in.getTipoUfficio(), 
+    									in.getCodiceUfficio(), 
+    									"", 
+    									in.getRuolo().getCodiceTipologiaServizio(),
+    									ecCached.getString(9), 
+    									ecCached.getString(21), 
+    									ecCached.getBigDecimal(47) == null ? 0 : ecCached.getBigDecimal(47).multiply(new BigDecimal(100)).longValue(), 
+    									"",
+    									"",
+    									0, 
+    									"",
+    									0, 
+    									"",
+    									getCurrentDate(), 
+    									isValidResult(sEsito) ? "00" : "01", 
+    									sEsito[1], 
+    									tipoBollettino, 
+    									in.getDocumento().getIdentificativoUnivocoVersamento(),
+    									ecCached.getString(50));
 
-							pgResponse.setTassonomia(ecCached.getString(57) == null ? "" : ecCached.getString(57));
+    							pgResponse.setTassonomia(ecCached.getString(57) == null ? "" : ecCached.getString(57));
 
-							try {
-								listXmlDP = estrattoContoDao.getWebRowSetXml("1"); // datiPagamento
-							} catch (Exception e) {}
-							if (listXmlDP != null && listXmlDP.length() > 0)
-								try {
-									ecCachedDettaglioPagamento = Convert.stringToWebRowSet(listXmlDP);
-								} catch (SQLException e) {}
-							try {
-								listXmlDC = estrattoContoDao.getWebRowSetXml("2"); // datiContabili
-							} catch (Exception e) {}
-							if (listXmlDC != null && listXmlDC.length() > 0) {
-								try {
-									ecCachedDettaglioContabile = Convert.stringToWebRowSet(listXmlDC);
-								} catch (SQLException e) {}
+    							try {
+    								listXmlDP = estrattoContoDao.getWebRowSetXml("1"); // datiPagamento
+    							} catch (Exception e) {}
+    							if (listXmlDP != null && listXmlDP.length() > 0)
+    								try {
+    									ecCachedDettaglioPagamento = Convert.stringToWebRowSet(listXmlDP);
+    								} catch (SQLException e) {}
+    							try {
+    								listXmlDC = estrattoContoDao.getWebRowSetXml("2"); // datiContabili
+    							} catch (Exception e) {}
+    							if (listXmlDC != null && listXmlDC.length() > 0) {
+    								try {
+    									ecCachedDettaglioContabile = Convert.stringToWebRowSet(listXmlDC);
+    								} catch (SQLException e) {}
 
-								extendDatiContabileEPagamento(pgResponse, ecCached, ecCachedDettaglioPagamento,
-										ecCachedDettaglioContabile,
-										in.getConfigurazione().getConfigurazioneIUV().getIdentificativoDominio(), 0);
-								bFoundResult = true;
-							}
-						}
-						
-						String codiceIpaProvincia = "";
-						if(Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario())) {
-							codiceIpaProvincia = dao.getCodiceIpa(in.getListTributi(1).getIdentificativoDominio(), in.getCodiceEnte());
-						}
-						
-						List<DovutoDto> dovutiList = new ArrayList<>();
-						
-						// Se il bollettino è multirata, invio le rate come dovuti separati
-						if (in.getListScadenze().length > 1) {
-							DovutoDto dovuto = new DovutoDto(pgResponse, anagrafica);
-							List<DettaglioDovutoDto> dettaglioList = new ArrayList<>();
-							int progressivo = 1;
+    								extendDatiContabileEPagamento(pgResponse, ecCached, ecCachedDettaglioPagamento,
+    										ecCachedDettaglioContabile,
+    										in.getConfigurazione().getConfigurazioneIUV().getIdentificativoDominio(), 0);
+    								bFoundResult = true;
+    							}
+    						}
+    						
+    						String codiceIpaProvincia = "";
+    						if(Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario())) {
+    							codiceIpaProvincia = dao.getCodiceIpa(in.getListTributi(1).getIdentificativoDominio(), in.getCodiceEnte());
+    						}
+    						
+    						List<DovutoDto> dovutiList = new ArrayList<>();
+    						
+    						// Se il bollettino è multirata, invio le rate come dovuti separati
+    						if (in.getListScadenze().length > 1) {
+    							DovutoDto dovuto = new DovutoDto(pgResponse, anagrafica);
+    							List<DettaglioDovutoDto> dettaglioList = new ArrayList<>();
+    							int progressivo = 1;
 
-							for(Scadenza scadenza : in.getListScadenze()) {																						
-								DettaglioDovutoDto dettaglio = new DettaglioDovutoDto();
-								dettaglio.setCausaleDebito(pgResponse.getCausale() + ", rata " + scadenza.getNumeroRata());   									
-								if(Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario())) {
-									dettaglio.setCodiceIpaCreditore(progressivo == 1 ? codiceIpaComune : codiceIpaProvincia); 
-								} else {
-									dettaglio.setCodiceIpaCreditore(codiceIpaComune); 
-								}
-								dettaglio.setCodiceTipoDebito(CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio())); 
-								dettaglio.setDataInizioValidita(OffsetDateTime.parse(Calendar.getInstance().getTime().toInstant().atOffset(ZoneOffset.UTC).toString(), DateTimeFormatter.ISO_OFFSET_DATE_TIME)); 
-						 		dettaglio.setGruppo("multirata"); 
-								dettaglio.setIdDeb(scadenza.getIdentificativoUnivocoVersamento()+scadenza.getNumeroRata()); 
-								dettaglio.setImportoDebito(scadenza.getImpBollettinoRata().doubleValue() / 100D);
-								dettaglio.setOrdinamento(progressivo); 
-								DatoAccertamentoDto datoAccertamento = new DatoAccertamentoDto();
-								datoAccertamento.setImportoAccertamento(BigDecimal.valueOf(scadenza.getImpBollettinoRata().doubleValue() / 100D));
-								datoAccertamento.setCodiceAccertamento(CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio()).getValue()); // CodiceTipoDebitoEnum.MULTE.getValue() 	
-								dettaglio.setDatiAccertamento(Arrays.asList(datoAccertamento));
-								dettaglioList.add(dettaglio);
-								progressivo++;							
-							}
-							dovuto.setDettaglioDovuto(dettaglioList);
-							dovutiList.add(dovuto);
-						} 
-						// Se il bollettino è multirata o se è soluzione unica, invio un dovuto con l'importo totale.
-						DovutoDto dovuto = new DovutoDto(pgResponse, codiceIpaComune, codiceIpaProvincia, Arrays.asList(in.getListTributi()), in.getAnagrafica()); 
-						dovutiList.add(dovuto);
-						
-						this.dovutoDaModificare = dovuto;
-						
-						RispostaInviaDovutiDto res = jppa.inviaDovuti(token, codiceIpaComune, dovutiList); // codiceIpaComune
-						if(res != null) {
-							dao.aggiornaFlagInviaDovuto(progressivoFlussoPerInviaDovuti, getSchemaDifferito(dbSchemaCodSocieta)); 							
-						}
-					}
-				}				
-				// SR PGNTACWS-2 fine
-		}
+    							for(Scadenza scadenza : in.getListScadenze()) {																						
+    								DettaglioDovutoDto dettaglio = new DettaglioDovutoDto();
+    								dettaglio.setCausaleDebito(pgResponse.getCausale() + ", rata " + scadenza.getNumeroRata());   									
+    								if(Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario())) {
+    									dettaglio.setCodiceIpaCreditore(progressivo == 1 ? codiceIpaComune : codiceIpaProvincia); 
+    								} else {
+    									dettaglio.setCodiceIpaCreditore(codiceIpaComune); 
+    								}
+    								dettaglio.setCodiceTipoDebito(CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio())); 
+    								dettaglio.setDataInizioValidita(OffsetDateTime.parse(Calendar.getInstance().getTime().toInstant().atOffset(ZoneOffset.UTC).toString(), DateTimeFormatter.ISO_OFFSET_DATE_TIME)); 
+    						 		dettaglio.setGruppo("multirata"); 
+    								dettaglio.setIdDeb(scadenza.getIdentificativoUnivocoVersamento()+scadenza.getNumeroRata()); 
+    								dettaglio.setImportoDebito(scadenza.getImpBollettinoRata().doubleValue() / 100D);
+    								dettaglio.setOrdinamento(progressivo); 
+    								DatoAccertamentoDto datoAccertamento = new DatoAccertamentoDto();
+    								datoAccertamento.setImportoAccertamento(BigDecimal.valueOf(scadenza.getImpBollettinoRata().doubleValue() / 100D));
+    								datoAccertamento.setCodiceAccertamento(CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio()).getValue()); // CodiceTipoDebitoEnum.MULTE.getValue() 	
+    								dettaglio.setDatiAccertamento(Arrays.asList(datoAccertamento));
+    								dettaglioList.add(dettaglio);
+    								progressivo++;							
+    							}
+    							dovuto.setDettaglioDovuto(dettaglioList);
+    							dovutiList.add(dovuto);
+    						} 
+    						// Se il bollettino è multirata o se è soluzione unica, invio un dovuto con l'importo totale.
+    						DovutoDto dovuto = new DovutoDto(pgResponse, codiceIpaComune, codiceIpaProvincia, Arrays.asList(in.getListTributi()), in.getAnagrafica()); 
+    						dovutiList.add(dovuto);
+    						
+    						this.dovutoDaModificare = dovuto;
+    						
+    						RispostaInviaDovutiDto res = jppa.inviaDovuti(token, codiceIpaComune, dovutiList); // codiceIpaComune
+    						if(res != null) {
+    							dao.aggiornaFlagInviaDovuto(progressivoFlussoPerInviaDovuti, getSchemaDifferito(dbSchemaCodSocieta)); 							
+    						}
+    					}
+    				}				
+    				// SR PGNTACWS-2 fine
+    			}
+        	}
         } catch (ConfigurazioneException e) {	
 			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC failed, configuration error due to: ", e);
 			response.setCodiceEsito("02");

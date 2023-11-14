@@ -23,6 +23,7 @@ public enum PropKeys {
 	, username
 	, password
 	, idEnte
+	, servizioJppa
 	// fine SR 20230108
 	;
 
