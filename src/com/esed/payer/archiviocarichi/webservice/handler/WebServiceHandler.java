@@ -11,10 +11,10 @@ import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPHeader;
 import javax.xml.soap.SOAPHeaderElement;
 
-import org.apache.log4j.Logger;
-
 import com.esed.payer.archiviocarichi.webservice.config.PrintStrings;
 import com.esed.payer.archiviocarichi.webservice.config.PropKeys;
+import com.seda.commons.logger.CustomLoggerManager;
+import com.seda.commons.logger.LoggerWrapper;
 import com.seda.j2ee5.jndi.JndiProxy;
 import com.seda.j2ee5.jndi.JndiProxyException;
 import com.seda.j2ee5.maf.components.servicelocator.ServiceLocator;
@@ -32,7 +32,7 @@ public abstract class WebServiceHandler extends JaxRpc10WebServiceHandler {
 	protected String dbSchemaCodSocieta; 
 	public final String DBSCHEMACODSOCIETA = "dbSchemaCodSocieta";
 	
-	protected static Logger logger;
+	protected static LoggerWrapper logger = CustomLoggerManager.get(WebServiceHandler.class);
 	
 	@Override
 	public void init(Object endPointContext) throws ServiceException {
@@ -51,7 +51,6 @@ public abstract class WebServiceHandler extends JaxRpc10WebServiceHandler {
     	//env.put(Context.INITIAL_CONTEXT_FACTORY, propertiesTree().getProperty(PropKeys.JNDI_CONTEXT.format(PropKeys.DEFAULT_NODE.format())));
     	//env.put(Context.PROVIDER_URL, propertiesTree().getProperty(PropKeys.JNDI_PROVIDER.format(PropKeys.DEFAULT_NODE.format())));
     	//fine LP PG200070
-    	logger = Logger.getLogger("FILE");
 	}
 	
 	@SuppressWarnings("unchecked")

@@ -50,10 +50,7 @@ public class CaricaDebitiJppa {
         jwtToken.setApiKey("Bearer " + token);
 
 		DovutiApi apiInstance = new DovutiApi();
-		RichiestaInviaDovutiRestDto richiesta = new RichiestaInviaDovutiRestDto(); // RichiestaInviaDovutiRestDto | richiesta
-		richiesta.setCodiceIPA(codiceIpa); 
-		richiesta.setCodiceServizio(CodiceServizioEnum.PAGONET);
-		richiesta.setDovuti(dovutiList);
+		RichiestaInviaDovutiRestDto richiesta = new RichiestaInviaDovutiRestDto(codiceIpa, CodiceServizioEnum.PAGONET, dovutiList); // RichiestaInviaDovutiRestDto | richiesta
 		
 		try {
 		    result = apiInstance.postInviaDovutiUsingPOST(richiesta);
@@ -77,12 +74,7 @@ public class CaricaDebitiJppa {
 		richiesta.setCodiceServizio(CodiceServizioEnum.PAGONET.toString());
 		richiesta.setDescrizioneMotivoEliminazione(CodiceMotivoEliminazioneEnum.ELIMINAZIONE_DEBITO.getValue());
 		
-		NumeroAvvisoDto numeroAvvisoDto = new NumeroAvvisoDto();
-		numeroAvvisoDto.setVersioneNumeroAvviso(0);
-		
-		numeroAvvisoDto.setNumeroAvviso(numeroAvviso); 
-		numeroAvvisoDto.setFlagAttivaDebito(true);
-		
+		NumeroAvvisoDto numeroAvvisoDto = new NumeroAvvisoDto(true, numeroAvviso, 1);
 		richiesta.setNumeroAvviso(numeroAvvisoDto);
 		
 		try {
