@@ -23,6 +23,9 @@
 					<exclude>**/*.java</exclude>
 				</excludes>
 			</resource>
+			<resource>
+				<directory>src/resources</directory>
+			</resource>
 		</resources>
 		<plugins>
 			<plugin>
