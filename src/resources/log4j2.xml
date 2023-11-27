@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Properties>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c - %m%n</Property>
+    </Properties>
+    <Appenders>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+        <RollingFile name="com-seda-payer-archiviocarichi-ws"
+                	  fileName="../standalone/log/com-seda-payer-archiviocarichi-ws.log"
+                	  filePattern="%d{yyyy-MM-dd}-com-seda-payer-archiviocarichi-ws.%i.log.gz"
+                	  ignoreExceptions="false" filePermissions="rw-rw-r--">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+			<!-- <JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/> -->
+            <Policies>
+                <SizeBasedTriggeringPolicy size="60MB" />
+            </Policies>
+            <!-- <DefaultRolloverStrategy max="10" /> -->
+            <ThresholdFilter level="INFO"/>
+        </RollingFile>
+        <RollingFile name="com-seda-payer-archiviocarichi-ws-error"
+                	 fileName="../standalone/log/com-seda-payer-archiviocarichi-ws-error.log"
+                	 filePattern="com-seda-payer-archiviocarichi-ws-error.%i.log"
+                     ignoreExceptions="false" filePermissions="rw-rw-r--">
+			<JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="60MB" />
+            </Policies>
+            <ThresholdFilter level="ERROR"/>
+        </RollingFile>
+    <Loggers>
+		<Logger name="com.seda.payer.archiviocarichi.webservice" level="DEBUG" additivity="false">
+			<AppenderRef ref="com-seda-payer-archiviocarichi-ws" />
+            <!-- <AppenderRef ref="com-seda-cart-ws-debug" /> -->
+            <AppenderRef ref="com-seda-payer-archiviocarichi-error" />
+		</Logger>         
+        <Root level="INFO" >
+            <AppenderRef ref="com-seda-payer-archiviocarichi-ws" />
+        </Root>
+    </Loggers>
+</Configuration>
