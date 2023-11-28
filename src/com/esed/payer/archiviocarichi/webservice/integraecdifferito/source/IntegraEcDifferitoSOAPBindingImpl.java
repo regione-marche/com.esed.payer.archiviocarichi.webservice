@@ -146,16 +146,14 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	private List<String> lstFunEnti = new ArrayList<String>();
 	//fine LP PG22XX05
 
-	//inizio SR 20230308	
+	// inizio SR PGNTACWS-2
 	private CachedRowSet ecCachedDettaglioPagamento = null;
 	private CachedRowSet ecCachedDettaglioContabile = null;
 	private RecuperaDatiBollettinoResponse pgResponse = null;
 	private String listXmlDP = null;
 	private String listXmlDC = null;
 	private int progressivoFlussoPerInviaDovuti = 0;
-	private boolean isVariazioneEC = false;
-	private DovutoDto dovutoDaModificare = null;
-	//fine SR 20230308
+	// fine SR PGNTACWS-2
 	
 	@Override
 	public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.InserimentoEcResponse inserimentoEC(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.InserimentoEcRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
@@ -950,9 +948,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 									testata);   						
 							
     						dovutiList.add(dovuto);
-    						
-    						this.dovutoDaModificare = dovuto;
-    						
+    					    						
     						RispostaInviaDovutiDto res = jppa.inviaDovuti(token, codiceIpaComune, dovutiList); // codiceIpaComune
     						if(res != null) {
     							dao.aggiornaFlagInviaDovuto(progressivoFlussoPerInviaDovuti, getSchemaDifferito(dbSchemaCodSocieta)); 							
@@ -1013,7 +1009,6 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	@SuppressWarnings("unused")
 	//fine LP PG200360
 	public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.VariazioneEcResponse variazioneEC(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.VariazioneEcRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
-		this.isVariazioneEC  = true;
     	ClearVariazioneEC(in); //LP PG22XX05
     	logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - inizio");
     	VariazioneEcResponse response = new VariazioneEcResponse(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), "", "", in.getDocumento());
@@ -1237,8 +1232,6 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			    	}
 		    	}
         	}
-        	
-    		this.isVariazioneEC  = false;
     	} catch (ConfigurazioneException e) {	
 			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC failed, configuration error due to: ", e);
 			response.setCodiceEsito("02");
@@ -1320,6 +1313,9 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 //				throw new NotFoundException("Posizione debitoria non presente in archivio");	
 //			} else {
 			//Verifico se sussistono pagamenti correlati alla posizione debitoria
+    		
+			String numeroAvvisoDaCancellare = archivioCarichiDao.getDocumento(docIn).getNumeroBollettinoPagoPA();
+	
 			estrattoContoDao = new EstrattoContoDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
 			logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC - doCachedRowAcquisizioneTransazioni - verifica presenza pagamenti su posizione debitoria");
 			//20220808 SB - inizio
@@ -1350,22 +1346,17 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						response.setCodiceEsito("00");
 			    		response.setMessaggioEsito("Richiesta eseguita con successo");
 			    		
+			    		// inizio SR PGNTACWS-2
 			        	if(propertiesTree().getProperty(PropKeys.servizioJppa.format()) != null && propertiesTree().getProperty(PropKeys.servizioJppa.format()).equals("Y")) {
 				    		CaricaDebitiJppa jppa = new CaricaDebitiJppa();
-							String token = jppa.login(propertiesTree().getProperty(PropKeys.username.format()), propertiesTree().getProperty(PropKeys.password.format()), propertiesTree().getProperty(PropKeys.idEnte.format()));
 							InviaDovutiDao dao = new InviaDovutiDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
 							String codiceIpaComune = "";
 							codiceIpaComune = dao.getCodiceIpa(in.getCodiceUtente(), in.getCodiceEnte());
 							
-				    		if (this.isVariazioneEC) {
-				    			// MODIFICA DOVUTO
-//				    			jppa.modificaDovuto(token, codiceIpaComune, dovutoDaModificare);
-				    		//} else {
-				    			// CANCELLA DOVUTO
-								jppa.cancellaDovuto(token, codiceIpaComune, in.getNumeroDocumento()); 		// qua ci vuole il numero avviso 						
-				    		}
+							String token = jppa.login(propertiesTree().getProperty(PropKeys.username.format()), propertiesTree().getProperty(PropKeys.password.format()), codiceIpaComune);
+							jppa.cancellaDovuto(token, codiceIpaComune, numeroAvvisoDaCancellare);  						
 			        	}
-		    			this.isVariazioneEC  = false;
+			        	// fine SR PGNTACWS-2
 		        	} else {
 		        		throw new NotFoundException("Posizione debitoria non presente in archivio");
 		        	}
