@@ -10,21 +10,19 @@ package com.esed.payer.archiviocarichi.webservice.monitoraggio.source;
 import java.sql.Connection;
 import java.util.List;
 
-import com.esed.payer.archiviocarichi.webservice.exception.ConfigurazioneException;
 //import com.esed.payer.archiviocarichi.webservice.exception.ValidazioneException;
 import com.esed.payer.archiviocarichi.webservice.handler.WebServiceHandler;
 import com.esed.payer.archiviocarichi.webservice.monitoraggio.dati.MonitoraggioTransazioniResponse;
 import com.esed.payer.archiviocarichi.webservice.monitoraggio.dati.ResponseType;
-import com.seda.commons.logger.LoggerBaseHandler;
 import com.seda.data.dao.DAOHelper;
 import com.seda.payer.core.bean.DettaglioTransazione;
 import com.seda.payer.core.dao.DettaglioTransazioneDao;
-import com.seda.payer.core.dao.TxTransazioniIVDao;
 public class MonitoraggioSOAPBindingImpl extends WebServiceHandler implements com.esed.payer.archiviocarichi.webservice.monitoraggio.source.MonitoraggioInterface{
 
 	private Connection connection = null;
 	private DettaglioTransazioneDao dettaglioTransazioniDao = null; 
 	
+	@Override
 	public com.esed.payer.archiviocarichi.webservice.monitoraggio.dati.MonitoraggioTransazioniResponse monitoraggioTransazioni(com.esed.payer.archiviocarichi.webservice.monitoraggio.dati.MonitoraggioTransazioniRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
     
 		MonitoraggioTransazioniResponse response = new MonitoraggioTransazioniResponse();
