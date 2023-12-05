@@ -8,7 +8,7 @@
             <PatternLayout pattern="${LOG_PATTERN}"/>
         </Console>
         <RollingFile name="com-seda-payer-archiviocarichi-ws"
-                	  fileName="../standalone/log/com-seda-payer-archiviocarichi-ws.log"
+                	  fileName="${sys:jboss.server.log.dir}/com-seda-payer-archiviocarichi-ws.log"
                 	  filePattern="%d{yyyy-MM-dd}-com-seda-payer-archiviocarichi-ws.%i.log.gz"
                 	  ignoreExceptions="false" filePermissions="rw-rw-r--">
             <PatternLayout pattern="${LOG_PATTERN}"/>
@@ -20,7 +20,7 @@
             <ThresholdFilter level="INFO"/>
         </RollingFile>
         <RollingFile name="com-seda-payer-archiviocarichi-ws-error"
-                	 fileName="../standalone/log/com-seda-payer-archiviocarichi-ws-error.log"
+                	 fileName="${sys:jboss.server.log.dir}/com-seda-payer-archiviocarichi-ws-error.log"
                 	 filePattern="com-seda-payer-archiviocarichi-ws-error.%i.log"
                      ignoreExceptions="false" filePermissions="rw-rw-r--">
 			<JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/>
