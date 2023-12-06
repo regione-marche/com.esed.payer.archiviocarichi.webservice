@@ -7,8 +7,8 @@
         <Console name="STDOUT" target="SYSTEM_OUT">
             <PatternLayout pattern="${LOG_PATTERN}"/>
         </Console>
-        <RollingFile name="ccom.esed.payer.archiviocarichi.webservice-ws"
-                	  fileName="${sys:jboss.server.log.dir}/ccom.esed.payer.archiviocarichi.webservice-ws.log"
+        <RollingFile name="com.esed.payer.archiviocarichi.webservice-ws"
+                	  fileName="${sys:jboss.server.log.dir}/com.esed.payer.archiviocarichi.webservice-ws.log"
                 	  filePattern="mgp.%i.log.gz"
                 	  ignoreExceptions="false" filePermissions="rw-rw-r--">
             <PatternLayout pattern="${LOG_PATTERN}"/>
@@ -18,9 +18,9 @@
             </Policies>
             <DefaultRolloverStrategy max="10" />
         </RollingFile>
-        <RollingFile name="ccom.esed.payer.archiviocarichi.webservice-ws-error"
-                	 fileName="${sys:jboss.server.log.dir}/ccom.esed.payer.archiviocarichi.webservice-ws-error.log"
-                	 filePattern="ccom.esed.payer.archiviocarichi.webservice-ws-error.%i.log"
+        <RollingFile name="com.esed.payer.archiviocarichi.webservice-ws-error"
+                	 fileName="${sys:jboss.server.log.dir}/com.esed.payer.archiviocarichi.webservice-ws-error.log"
+                	 filePattern="com.esed.payer.archiviocarichi.webservice-ws-error.%i.log"
                      ignoreExceptions="false" filePermissions="rw-rw-r--">
 			<JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/>
             <Policies>
@@ -28,9 +28,9 @@
             </Policies>
             <ThresholdFilter level="ERROR"/>
         </RollingFile>
-        <RollingFile name="ccom.esed.payer.archiviocarichi.webservice-ws-debug"
-                	 fileName="${sys:jboss.server.log.dir}/ccom.esed.payer.archiviocarichi.webservice-ws-debug.log"
-                	 filePattern="ccom.esed.payer.archiviocarichi.webservice-ws-debug.%i.log"
+        <RollingFile name="com.esed.payer.archiviocarichi.webservice-ws-debug"
+                	 fileName="${sys:jboss.server.log.dir}/com.esed.payer.archiviocarichi.webservice-ws-debug.log"
+                	 filePattern="com.esed.payer.archiviocarichi.webservice-ws-debug.%i.log"
                      ignoreExceptions="false" filePermissions="rw-rw-r--">
 			<JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/>
             <Policies>
@@ -44,8 +44,8 @@
         
         
         
-                <RollingFile name="ccom.esed.payer.archiviocarichi.webservice"
-                	  fileName="${sys:jboss.server.log.dir}/ccom.esed.payer.archiviocarichi.webservice.log"
+                <RollingFile name="com.esed.payer.archiviocarichi.webservice"
+                	  fileName="${sys:jboss.server.log.dir}/com.esed.payer.archiviocarichi.webservice.log"
                 	  filePattern="mgp.%i.log.gz"
                 	  ignoreExceptions="false" filePermissions="rw-rw-r--">
             <PatternLayout pattern="${LOG_PATTERN}"/>
@@ -55,9 +55,9 @@
             </Policies>
             <DefaultRolloverStrategy max="10" />
         </RollingFile>
-        <RollingFile name="ccom.esed.payer.archiviocarichi.webservice-error"
-                	 fileName="${sys:jboss.server.log.dir}/ccom.esed.payer.archiviocarichi.webservice-error.log"
-                	 filePattern="ccom.esed.payer.archiviocarichi.webservice-error.%i.log"
+        <RollingFile name="com.esed.payer.archiviocarichi.webservice-error"
+                	 fileName="${sys:jboss.server.log.dir}/com.esed.payer.archiviocarichi.webservice-error.log"
+                	 filePattern="com.esed.payer.archiviocarichi.webservice-error.%i.log"
                      ignoreExceptions="false" filePermissions="rw-rw-r--">
 			<JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/>
             <Policies>
@@ -65,9 +65,9 @@
             </Policies>
             <ThresholdFilter level="ERROR"/>
         </RollingFile>
-        <RollingFile name="ccom.esed.payer.archiviocarichi.webservice-debug"
-                	 fileName="${sys:jboss.server.log.dir}/ccom.esed.payer.archiviocarichi.webservice-debug.log"
-                	 filePattern="ccom.esed.payer.archiviocarichi.webservice-debug.%i.log"
+        <RollingFile name="com.esed.payer.archiviocarichi.webservice-debug"
+                	 fileName="${sys:jboss.server.log.dir}/com.esed.payer.archiviocarichi.webservice-debug.log"
+                	 filePattern="com.esed.payer.archiviocarichi.webservice-debug.%i.log"
                      ignoreExceptions="false" filePermissions="rw-rw-r--">
 			<JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/>
             <Policies>
@@ -80,19 +80,19 @@
         
     </Appenders>
     <Loggers>
-		<Logger name="com.esed.pagopa.pdf.webservice" level="DEBUG" additivity="false">
-			<AppenderRef ref="ccom.esed.payer.archiviocarichi.webservice-ws" />
-            <AppenderRef ref="ccom.esed.payer.archiviocarichi.webservice-ws-debug" />
-            <AppenderRef ref="ccom.esed.payer.archiviocarichi.webservice-ws-error" />
+		<Logger name="com.esed.payer.archiviocarichi.webservice" level="DEBUG" additivity="false">
+			<AppenderRef ref="com.esed.payer.archiviocarichi.webservice-ws" />
+            <AppenderRef ref="com.esed.payer.archiviocarichi.webservice-ws-debug" />
+            <AppenderRef ref="com.esed.payer.archiviocarichi.webservice-ws-error" />
 		</Logger>         
         <Root level="INFO" >
             <AppenderRef ref="STDOUT" />
         </Root>
         
-        <Logger name="com.esed.pagopa.pdf" level="DEBUG" additivity="false">
-			<AppenderRef ref="ccom.esed.payer.archiviocarichi.webservice" />
-            <AppenderRef ref="ccom.esed.payer.archiviocarichi.webservice-debug" />
-            <AppenderRef ref="ccom.esed.payer.archiviocarichi.webservice-error" />
+        <Logger name="com.esed.payer.archiviocarichi.webservice" level="DEBUG" additivity="false">
+			<AppenderRef ref="com.esed.payer.archiviocarichi.webservice" />
+            <AppenderRef ref="com.esed.payer.archiviocarichi.webservice-debug" />
+            <AppenderRef ref="com.esed.payer.archiviocarichi.webservice-error" />
 		</Logger>         
         <Root level="INFO" >
             <AppenderRef ref="STDOUT" />
