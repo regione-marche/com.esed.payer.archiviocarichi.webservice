@@ -29,6 +29,7 @@
             </Policies>
             <ThresholdFilter level="ERROR"/>
         </RollingFile>
+     </Appenders>
     <Loggers>
 		<Logger name="com.seda.payer.archiviocarichi.webservice" level="DEBUG" additivity="false">
 			<AppenderRef ref="com-seda-payer-archiviocarichi-ws" />
