@@ -7,36 +7,96 @@
         <Console name="STDOUT" target="SYSTEM_OUT">
             <PatternLayout pattern="${LOG_PATTERN}"/>
         </Console>
-        <RollingFile name="com-seda-payer-archiviocarichi-ws"
-                	  fileName="${sys:jboss.server.log.dir}/com-seda-payer-archiviocarichi-ws.log"
-                	  filePattern="%d{yyyy-MM-dd}-com-seda-payer-archiviocarichi-ws.%i.log.gz"
+        <RollingFile name="com.esed.payer.archiviocarichi.webservice-ws"
+                	  fileName="${sys:jboss.server.log.dir}/com.esed.payer.archiviocarichi.webservice-ws.log"
+                	  filePattern="mgp.%i.log.gz"
                 	  ignoreExceptions="false" filePermissions="rw-rw-r--">
             <PatternLayout pattern="${LOG_PATTERN}"/>
 			<!-- <JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/> -->
             <Policies>
-                <SizeBasedTriggeringPolicy size="60MB" />
+                <SizeBasedTriggeringPolicy size="500MB" />
             </Policies>
-            <!-- <DefaultRolloverStrategy max="10" /> -->
-            <ThresholdFilter level="INFO"/>
+            <DefaultRolloverStrategy max="10" />
         </RollingFile>
-        <RollingFile name="com-seda-payer-archiviocarichi-ws-error"
-                	 fileName="${sys:jboss.server.log.dir}/com-seda-payer-archiviocarichi-ws-error.log"
-                	 filePattern="com-seda-payer-archiviocarichi-ws-error.%i.log"
+        <RollingFile name="com.esed.payer.archiviocarichi.webservice-ws-error"
+                	 fileName="${sys:jboss.server.log.dir}/com.esed.payer.archiviocarichi.webservice-ws-error.log"
+                	 filePattern="com.esed.payer.archiviocarichi.webservice-ws-error.%i.log"
                      ignoreExceptions="false" filePermissions="rw-rw-r--">
 			<JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/>
             <Policies>
-                <SizeBasedTriggeringPolicy size="60MB" />
+                <SizeBasedTriggeringPolicy size="200MB" />
             </Policies>
             <ThresholdFilter level="ERROR"/>
         </RollingFile>
+        <RollingFile name="com.esed.payer.archiviocarichi.webservice-ws-debug"
+                	 fileName="${sys:jboss.server.log.dir}/com.esed.payer.archiviocarichi.webservice-ws-debug.log"
+                	 filePattern="com.esed.payer.archiviocarichi.webservice-ws-debug.%i.log"
+                     ignoreExceptions="false" filePermissions="rw-rw-r--">
+			<JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="500MB" />
+            </Policies>
+            <ThresholdFilter level="DEBUG"/>
+            <DefaultRolloverStrategy max="10" />
+        </RollingFile>
+        
+        
+        
+        
+        
+                <RollingFile name="com.esed.payer.archiviocarichi.webservice"
+                	  fileName="${sys:jboss.server.log.dir}/com.esed.payer.archiviocarichi.webservice.log"
+                	  filePattern="mgp.%i.log.gz"
+                	  ignoreExceptions="false" filePermissions="rw-rw-r--">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+			<!-- <JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/> -->
+            <Policies>
+                <SizeBasedTriggeringPolicy size="500MB" />
+            </Policies>
+            <DefaultRolloverStrategy max="10" />
+        </RollingFile>
+        <RollingFile name="com.esed.payer.archiviocarichi.webservice-error"
+                	 fileName="${sys:jboss.server.log.dir}/com.esed.payer.archiviocarichi.webservice-error.log"
+                	 filePattern="com.esed.payer.archiviocarichi.webservice-error.%i.log"
+                     ignoreExceptions="false" filePermissions="rw-rw-r--">
+			<JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="200MB" />
+            </Policies>
+            <ThresholdFilter level="ERROR"/>
+        </RollingFile>
+        <RollingFile name="com.esed.payer.archiviocarichi.webservice-debug"
+                	 fileName="${sys:jboss.server.log.dir}/com.esed.payer.archiviocarichi.webservice-debug.log"
+                	 filePattern="com.esed.payer.archiviocarichi.webservice-debug.%i.log"
+                     ignoreExceptions="false" filePermissions="rw-rw-r--">
+			<JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="500MB" />
+            </Policies>
+            <ThresholdFilter level="DEBUG"/>
+            <DefaultRolloverStrategy max="10" />
+        </RollingFile>
+        
+        
+    </Appenders>
     <Loggers>
-		<Logger name="com.seda.payer.archiviocarichi.webservice" level="DEBUG" additivity="false">
-			<AppenderRef ref="com-seda-payer-archiviocarichi-ws" />
-            <!-- <AppenderRef ref="com-seda-cart-ws-debug" /> -->
-            <AppenderRef ref="com-seda-payer-archiviocarichi-error" />
+		<Logger name="com.esed.payer.archiviocarichi.webservice" level="DEBUG" additivity="false">
+			<AppenderRef ref="com.esed.payer.archiviocarichi.webservice-ws" />
+            <AppenderRef ref="com.esed.payer.archiviocarichi.webservice-ws-debug" />
+            <AppenderRef ref="com.esed.payer.archiviocarichi.webservice-ws-error" />
 		</Logger>         
         <Root level="INFO" >
-            <AppenderRef ref="com-seda-payer-archiviocarichi-ws" />
+            <AppenderRef ref="STDOUT" />
         </Root>
+        
+        <Logger name="com.esed.payer.archiviocarichi.webservice" level="DEBUG" additivity="false">
+			<AppenderRef ref="com.esed.payer.archiviocarichi.webservice" />
+            <AppenderRef ref="com.esed.payer.archiviocarichi.webservice-debug" />
+            <AppenderRef ref="com.esed.payer.archiviocarichi.webservice-error" />
+		</Logger>         
+        <Root level="INFO" >
+            <AppenderRef ref="STDOUT" />
+        </Root>
+        
     </Loggers>
 </Configuration>
