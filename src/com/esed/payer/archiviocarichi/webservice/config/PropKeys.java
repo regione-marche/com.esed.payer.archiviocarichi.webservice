@@ -19,6 +19,12 @@ public enum PropKeys {
 	, generatorePdf
 	, urlWSRestPdf
 	 //fine GG 20210909
+	// inizio SR 20230108
+	, username
+	, password
+	, idEnte
+	, servizioJppa
+	// fine SR 20230108
 	;
 
     private static ResourceBundle rb;

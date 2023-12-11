@@ -106,6 +106,8 @@ public class GeosUtil {
 		} else {
 			if (docIban.substring(5,10).equals("07601")){
 	        	ibanPostale = true;
+	        	System.out.println("ibanPostale: "+ibanPostale);
+	        	System.out.println("docIban.substring" + docIban.substring(5,10).equals("07601"));
 	        }
 		}
         String tipoIban = ibanPostale ? "POSTE" : "STANDARD";
@@ -123,7 +125,11 @@ public class GeosUtil {
         	ex.printStackTrace();
         } 
         if (flagMultibeneficiario!=null && flagMultibeneficiario.trim().equals("Y")) {
-        	tipoStampaFlu = "B";
+        	if(ibanPostale==false) {
+        		tipoStampaFlu = "B";
+        	}else {
+        		tipoStampaFlu = "P";
+        	}
         }
         //PGNTACWS-1 - fine
         String idFlusso = resultSet.getString("FLU_ID_FLUSSO"); //TODO da verificare se serve

@@ -7,6 +7,7 @@
 
 package com.esed.payer.archiviocarichi.webservice.integraecdifferito.source;
 
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -20,8 +21,11 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.SimpleDateFormat;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,40 +44,9 @@ import javax.xml.bind.JAXB;
 
 import org.apache.axis.utils.ByteArrayOutputStream;
 import org.apache.commons.io.FileUtils;
+import org.threeten.bp.OffsetDateTime;
+import org.threeten.bp.format.DateTimeFormatter;
 
-import com.lowagie.text.pdf.PdfReader;
-import com.lowagie.text.pdf.PdfStamper;
-import com.seda.commons.string.Convert;
-import com.seda.data.helper.Helper;
-//inizio LP - mail Giorgia 20200608
-import com.seda.payer.commons.geos.Bollettino;
-import com.seda.payer.commons.geos.DatiAnagrafici;
-import com.seda.payer.commons.geos.DatiCreditore;
-import com.seda.payer.commons.geos.Flusso;
-import com.seda.payer.commons.geos.WSRest_GEOS;
-import com.seda.payer.core.bean.AnagraficaBollettino;
-//fine LP - mail Giorgia 20200608
-import com.seda.payer.core.bean.ArchivioCarichiAnagrafica;
-import com.seda.payer.core.bean.ArchivioCarichiCoda;
-import com.seda.payer.core.bean.ArchivioCarichiDocumento;
-import com.seda.payer.core.bean.ArchivioCarichiMovimento;
-import com.seda.payer.core.bean.ArchivioCarichiRuolo;
-import com.seda.payer.core.bean.ArchivioCarichiScadenza;
-import com.seda.payer.core.bean.ArchivioCarichiTesta;
-import com.seda.payer.core.bean.ArchivioCarichiTributo;
-import com.seda.payer.core.bean.ConfigPagamento;
-import com.seda.payer.core.bean.ConfigurazioneModello3;
-import com.seda.payer.core.bean.Ente;
-import com.seda.payer.core.bean.EntrateTributiPage;
-import com.seda.payer.core.dao.ArchivioCarichiDao;
-import com.seda.payer.core.dao.ConfigPagamentoDao;
-import com.seda.payer.core.dao.ConfigurazioneModello3DaoImpl;
-import com.seda.payer.core.dao.ElaborazioneFlussiDao;
-import com.seda.payer.core.dao.EnteDao;
-import com.seda.payer.core.dao.EntrateBancaDatiDao;
-import com.seda.payer.core.dao.EstrattoContoDao;
-import com.seda.payer.core.exception.DaoException;
-import com.seda.payer.facade.dto.ConfigPagamentoDto;
 import com.esed.payer.archiviocarichi.webservice.config.PropKeys;
 import com.esed.payer.archiviocarichi.webservice.exception.ConfigurazioneException;
 import com.esed.payer.archiviocarichi.webservice.exception.DuplicateException;
@@ -98,6 +71,8 @@ import com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.Scadenz
 import com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.Tributo;
 import com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.VariazioneEcRequest;
 import com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.VariazioneEcResponse;
+import com.esed.payer.archiviocarichi.webservice.model.CaricaDebitiJppa;
+import com.esed.payer.archiviocarichi.webservice.model.InviaDovutiDao;
 import com.esed.payer.archiviocarichi.webservice.util.GenericsDateNumbers;
 import com.esed.payer.archiviocarichi.webservice.util.IuvUtils;
 import com.esed.payer.archiviocarichi.webservice.util.VerificaCodiceFiscale;
@@ -108,9 +83,54 @@ import com.esed.payer.archiviocarichi.webservice.util.VerificaCodiceFiscale;
 //import com.esed.payer.archiviocarichi.webservice.util.geos.Flusso;
 //fine LP - mail Giorgia 20200608
 import com.esed.payer.archiviocarichi.webservice.util.geos.GeosUtil;
+import com.lowagie.text.pdf.PdfReader;
+import com.lowagie.text.pdf.PdfStamper;
+import com.seda.commons.string.Convert;
+import com.seda.data.helper.Helper;
+//inizio LP - mail Giorgia 20200608
+import com.seda.payer.commons.geos.Bollettino;
+import com.seda.payer.commons.geos.DatiAnagrafici;
+import com.seda.payer.commons.geos.DatiCreditore;
+import com.seda.payer.commons.geos.Flusso;
+import com.seda.payer.commons.geos.WSRest_GEOS;
+//fine LP - mail Giorgia 20200608
+import com.seda.payer.core.bean.ArchivioCarichiAnagrafica;
+import com.seda.payer.core.bean.ArchivioCarichiCoda;
+import com.seda.payer.core.bean.ArchivioCarichiDocumento;
+import com.seda.payer.core.bean.ArchivioCarichiMovimento;
+import com.seda.payer.core.bean.ArchivioCarichiRuolo;
+import com.seda.payer.core.bean.ArchivioCarichiTesta;
+import com.seda.payer.core.bean.ArchivioCarichiTributo;
+import com.seda.payer.core.bean.ConfigPagamento;
+import com.seda.payer.core.bean.ConfigurazioneModello3;
+import com.seda.payer.core.bean.Ente;
+import com.seda.payer.core.bean.EntrateTributiPage;
+import com.seda.payer.core.dao.ArchivioCarichiDao;
+import com.seda.payer.core.dao.ConfigPagamentoDao;
+import com.seda.payer.core.dao.ConfigurazioneModello3DaoImpl;
+import com.seda.payer.core.dao.ElaborazioneFlussiDao;
+import com.seda.payer.core.dao.EnteDao;
+import com.seda.payer.core.dao.EntrateBancaDatiDao;
+import com.seda.payer.core.dao.EstrattoContoDao;
+import com.seda.payer.core.exception.DaoException;
+import com.seda.payer.facade.dto.ConfigPagamentoDto;
+import com.seda.payer.integraente.webservice.dati.RecuperaDatiBollettinoResponse;
+import com.seda.payer.integraente.webservice.dati.TipoBollettino;
+
+import io.swagger.client.model.ContribuenteDto;
+import io.swagger.client.model.ContribuenteDto.TipoIdentificativoUnivocoEnum;
+import io.swagger.client.model.DatoAccertamentoDto;
+import io.swagger.client.model.DettaglioDovutoDto;
+import io.swagger.client.model.DettaglioDovutoDto.CodiceTipoDebitoEnum;
+import io.swagger.client.model.DettaglioDovutoDto.SpeseNotificaDaAttualizzareEnum;
+import io.swagger.client.model.DovutoDto;
+import io.swagger.client.model.DovutoDto.ContestoDovutoEnum;
+import io.swagger.client.model.NumeroAvvisoDto;
+import io.swagger.client.model.RispostaInviaDovutiDto;
 //inizio LP - mail Giorgia 20200608
 //import com.esed.payer.archiviocarichi.webservice.util.geos.WSRest_GEOS;
 //fine LP - mail Giorgia 20200608
+import io.swagger.client.model.TestataDovutoDto;
 
 public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler implements com.esed.payer.archiviocarichi.webservice.integraecdifferito.source.IntegraEcDifferitoInterface{
 	
@@ -126,8 +146,20 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	private List<String> lstFunEnti = new ArrayList<String>();
 	//fine LP PG22XX05
 
+	// inizio SR PGNTACWS-2
+	private CachedRowSet ecCachedDettaglioPagamento = null;
+	private CachedRowSet ecCachedDettaglioContabile = null;
+	private RecuperaDatiBollettinoResponse pgResponse = null;
+	private String listXmlDP = null;
+	private String listXmlDC = null;
+	private int progressivoFlussoPerInviaDovuti = 0;
+	// fine SR PGNTACWS-2
+	
+	@Override
 	public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.InserimentoEcResponse inserimentoEC(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.InserimentoEcRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
-		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - inizio");
+		CachedRowSet ecCached = null;
+		
+		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - inizio");
 		StringWriter sw = new StringWriter();
 		JAXB.marshal(in, sw);
 		String xmlString = sw.toString();
@@ -139,7 +171,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 		sw = null;
 		//fine LP PG22XX05
     	ClearInserimentoEC(in); //LP PG22XX05
-		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - request: " + xmlString);
+    	logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - request: " + xmlString);
 		InserimentoEcResponse response = new InserimentoEcResponse(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), "", "", in.getDocumento());
 		boolean checkDuplicate = false;
 		int numeroRecord = 0;
@@ -168,7 +200,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			String flagVariazione = fileNameToElab.substring(fileNameToElab.length()-3, fileNameToElab.length());
 			//Controllo se sono in variazione
 			//
-			if(flagVariazione.equals("_§v")) {
+			if(flagVariazione.equals("_v")) {
 				fileNameToElab = configurazione.getIdentificativoFlusso().substring(0,fileNameToElab.length()-3);
 			}else {
 				if(!matcher.lookingAt()){
@@ -180,13 +212,13 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	    		//Prima verifico la presenza in archivio di flussi con stesso identificativo flusso /nome file in giornate differenti
 	    		int progFlussoPerNomeAltraData = archivioCarichiDao.getProgFlussoPerNomeAltraData(fileNameToElab, java.sql.Date.valueOf(dataFlusso));
 	    		if (progFlussoPerNomeAltraData > 0) 
-	    			throw new ValidazioneException("identificativo flusso " + fileNameToElab + " già presente in archivio");
+	    			throw new ValidazioneException("identificativo flusso " + fileNameToElab + " gi presente in archivio");
 			}
 			configurazione.setIdentificativoFlusso(fileNameToElab);
 			//********SPOSTATO DA RIGA 146 - fine******************//
 			
         	//Verifica input
-			debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - checkRequest");
+			logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - checkRequest");
 			boolean resCheck = checkRequest(in.getCodiceUtente(), in.getCodiceEnte(), configurazione, documento, in.getListScadenze(), in.getListTributi(), anagrafica, "I");
 
         	if (resCheck) {
@@ -297,14 +329,16 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				int progressivoFlusso = saveLogFlussi(elaborazioneFlussiDao, -1, in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso),
 						                              progressivoFile, "PER", "EP", fileNameToElab, new Timestamp(System.currentTimeMillis()), 
 						                              new Timestamp(System.currentTimeMillis()), "Y", "N", dbSchemaCodSocieta);
+				
+				this.progressivoFlussoPerInviaDovuti = progressivoFlusso;
 				//fine LP PG200070
-				debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - progressivoFlusso: " + progressivoFlusso);
+				logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - progressivoFlusso: " + progressivoFlusso);
 				
 				boolean flagSuccessfullExecution = false;
 				try {	
 					String numeroBollettinoPagoPA = "";
 					String identificativoUnivocoVersamento = "";
-					debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - getDocumento numeroDocumento: " + documento.getNumeroDocumento());
+					logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - getDocumento numeroDocumento: " + documento.getNumeroDocumento());
 					ArchivioCarichiDocumento docIn = prepareArchivioCarichiDocumento(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), documento.getNumeroDocumento());
 					ArchivioCarichiDocumento docOut = archivioCarichiDao.getDocumento(docIn);
 					if (docOut.getProgressivoFlusso() == null) { 
@@ -318,16 +352,16 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							System.out.println("Identificativo univoco versamento"+identificativoUnivocoVersamento);
 							response.getDocumento().setNumeroBollettinoPagoPA(numeroBollettinoPagoPA);
 							response.getDocumento().setIdentificativoUnivocoVersamento(identificativoUnivocoVersamento);
-							debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - numeroBollettinoPagoPA: " + numeroBollettinoPagoPA);
-							debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - identificativoUnivocoVersamento: " + identificativoUnivocoVersamento);
+							logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - numeroBollettinoPagoPA: " + numeroBollettinoPagoPA);
+							logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - identificativoUnivocoVersamento: " + identificativoUnivocoVersamento);
 						} else {
 							numeroBollettinoPagoPA = documento.getNumeroBollettinoPagoPA();
 							identificativoUnivocoVersamento = documento.getIdentificativoUnivocoVersamento();
 						}
-						debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH1");
+						logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH1");
 						//EH1 Documento
 						numeroRecord++;
-						//Attenzione a numero bollettino pagoPA perchè se non viene fornito dovrebbe essere da noi generato secondo le configurazioni, previo controllo delle configurazioni con quanto in input
+						//Attenzione a numero bollettino pagoPA perch se non viene fornito dovrebbe essere da noi generato secondo le configurazioni, previo controllo delle configurazioni con quanto in input
 						elaborazioneFlussiDao.doInsertEH1(progressivoFlusso, "EH1", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), 
 								in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), 
 								in.getImpostaServizio(), documento.getNumeroDocumento(), anagrafica.getCodiceFiscale().toUpperCase(), 
@@ -349,14 +383,14 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								, documento.getTassonomia()==null?"":documento.getTassonomia()); //PG200360 LP
 					} else {
 						checkDuplicate = true;
-						throw new Exception("Posizione debitoria già presente in archivio");
+						throw new Exception("Posizione debitoria gi presente in archivio");
 					}
 			
 					//EH2 Scadenze
 					if (in.getListScadenze()!=null && in.getListScadenze().length>0) {
 						for(Scadenza scadenza : in.getListScadenze()) {
 							numeroRecord++;
-							debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - getScadenza numeroRata: " + scadenza.getNumeroRata());
+							logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - getScadenza numeroRata: " + scadenza.getNumeroRata());
 							//ArchivioCarichiScadenza scadIn = prepareArchivioCarichiScadenza(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), documento.getNumeroDocumento(), scadenza.getNumeroRata());
 							//ArchivioCarichiScadenza scadOut = archivioCarichiDao.getScadenza(scadIn);
 							String numeroBollettinoScadenzaPagoPA = "";
@@ -370,8 +404,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 									String[] codiciScadenza = IuvUtils.calcolaIuv(in.getCodiceEnte(),configurazione.getConfigurazioneIUV(), connection, getSchemaDifferito(dbSchemaCodSocieta));
 									numeroBollettinoScadenzaPagoPA = codiciScadenza[0] ;
 									identificativoUnivocoVersamentoScadenza = codiciScadenza[1] ;
-									debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - numeroBollettinoScadenzaPagoPA: " + numeroBollettinoScadenzaPagoPA);
-									debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - identificativoUnivocoVersamentoScadenza: " + identificativoUnivocoVersamentoScadenza);
+									logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - numeroBollettinoScadenzaPagoPA: " + numeroBollettinoScadenzaPagoPA);
+									logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - identificativoUnivocoVersamentoScadenza: " + identificativoUnivocoVersamentoScadenza);
 									//inizio LP PG210130
 									scadenza.setNumeroBollettinoPagoPA(numeroBollettinoScadenzaPagoPA);
 									//fine LP PG210130
@@ -381,7 +415,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								identificativoUnivocoVersamentoScadenza = scadenza.getIdentificativoUnivocoVersamento();
 							}
 							
-							debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH2");
+							logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH2");
 							elaborazioneFlussiDao.doInsertEH2(progressivoFlusso, "EH2", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), 
 									in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), 
 									in.getImpostaServizio(), documento.getNumeroDocumento(), 
@@ -401,7 +435,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						for(DettaglioPagamento dettPag : listPagamento) {
 							numeroRecord++;
 							int numeroRata = dettPag.getNumeroRata();
-							debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - dettPag numeroRata: " + numeroRata);
+							logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - dettPag numeroRata: " + numeroRata);
 							boolean trovato = false;
 							if(numeroRata == 0) {
 								dettPag.setNumeroBollettinoPagoPA(numeroBollettinoPagoPA);
@@ -418,7 +452,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								}
 							}
 							if(trovato) {
-								debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEHD");
+								logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEHD");
 								elaborazioneFlussiDao.doInsertEHD(progressivoFlusso, "EHD", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), 
 										in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), 
 										in.getImpostaServizio(), documento.getNumeroDocumento(),
@@ -445,7 +479,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						for(DettaglioContabile dettCont : listContabile) {
 							numeroRecord++;
 							int numeroRata = dettCont.getNumeroRata();
-							debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - dettCont numeroRata: " + numeroRata);
+							logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - dettCont numeroRata: " + numeroRata);
 							boolean trovato = false;
 							if(numeroRata == 0) {
 								dettCont.setNumeroBollettinoPagoPA(numeroBollettinoPagoPA);
@@ -462,7 +496,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								}
 							}
 							if(trovato) {
-								debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEHC");
+								logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEHC");
 								elaborazioneFlussiDao.doInsertEHC(progressivoFlusso, "EHC", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), 
 										in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), 
 										in.getImpostaServizio(), documento.getNumeroDocumento(),
@@ -486,16 +520,16 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					//inizio LP PG200360
 					//numeroRecord++;
 					//fine LP PG200360
-					//Attenzione perchè ruolo va in aggiornamento dato che non viene cancellato in quanto potrebbe essere associato ad altri documenti
+					//Attenzione perch ruolo va in aggiornamento dato che non viene cancellato in quanto potrebbe essere associato ad altri documenti
 					//Se esiste aggiorno, se non esiste inserisco
-					debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - getRuolo impostaServizio: " + in.getImpostaServizio());
+					logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - getRuolo impostaServizio: " + in.getImpostaServizio());
 					ArchivioCarichiRuolo ruoloIn = prepareArchivioCarichiRuolo(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio());
 					ArchivioCarichiRuolo ruoloOut = archivioCarichiDao.getRuolo(ruoloIn);
 					if (ruoloOut.getProgressivoFlusso() == null) {
 						//inizio LP PG200360
 						numeroRecord++;
 						//fine LP PG200360
-						debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH6");
+						logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH6");
 						elaborazioneFlussiDao.doInsertEH6(progressivoFlusso, "EH6", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), 
 								in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), 
 								in.getImpostaServizio(), ruolo.getDescrizioneImpostaServizio(), 
@@ -504,7 +538,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						if (!ruoloOut.getCodTipologiaServizio().equals(in.getRuolo().getCodiceTipologiaServizio())) {
 							throw new ValidazioneException("codiceTipologiaServizio pervenuto differente dal codice presente in archivio per stessa imposta servizio");
 						}
-						debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - updateRuolo");
+						logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - updateRuolo");
 						ruoloOut.setDescImpostaServizio(ruolo.getDescrizioneImpostaServizio());
 						ruoloOut.setDescTipologiaServizio(ruolo.getDescrizioneTipologiaServizio());
 						archivioCarichiDao.updateRuolo(ruoloOut);
@@ -514,7 +548,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					if (in.getListTributi()!=null && in.getListTributi().length>0) {
 						for(Tributo tributo : in.getListTributi()) {
 							numeroRecord++;
-							debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - getTributo codice/anno/progressivo tributo: " + tributo.getCodiceTributo()+"/"+tributo.getAnnoTributo()+"/"+tributo.getProgressivoTributo());
+							logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - getTributo codice/anno/progressivo tributo: " + tributo.getCodiceTributo()+"/"+tributo.getAnnoTributo()+"/"+tributo.getProgressivoTributo());
 							//ArchivioCarichiTributo tribIn = prepareArchivioCarichiTributo(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), documento.getNumeroDocumento(), tributo.getCodiceTributo(), tributo.getAnnoTributo(), tributo.getProgressivoTributo());
 							//ArchivioCarichiTributo tribOut = archivioCarichiDao.getTributo(tribIn);
 								String noteTributo = tributo.getNoteTributo()==null?"":tributo.getNoteTributo();
@@ -536,7 +570,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								String metadatiPagoPATariTefaValue = tributo.getMetadatiPagoPATariTefaValue() == null ? "" : tributo.getMetadatiPagoPATariTefaValue();
 								//fine SB PAGONET-537
 
-								debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH7");
+								logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH7");
 								/*
 								elaborazioneFlussiDao.doInsertEH7(progressivoFlusso, "EH7", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), 
 										in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), documento.getNumeroDocumento(), 
@@ -571,9 +605,9 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					//inizio LP PG200360
 					//numeroRecord++;
 					//fine LP PG200360
-					//Attenzione perchè anagrafica va in aggiornamento dato che non viene cancellata in quanto potrebbe essere associata ad altri documenti
+					//Attenzione perch anagrafica va in aggiornamento dato che non viene cancellata in quanto potrebbe essere associata ad altri documenti
 					//Se esiste aggiorno, se non esiste inserisco
-					debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - getAnagrafica codiceFiscale: " + anagrafica.getCodiceFiscale().toUpperCase());
+					logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - getAnagrafica codiceFiscale: " + anagrafica.getCodiceFiscale().toUpperCase());
 					ArchivioCarichiAnagrafica anaIn = prepareArchivioCarichiAnagrafica(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), anagrafica.getCodiceFiscale().toUpperCase());
 					ArchivioCarichiAnagrafica anaOut = archivioCarichiDao.getAnagrafica(anaIn);
 					String dataNascita = GenericsDateNumbers.formatData(anagrafica.getDataNascita(),"dd/MM/yyyy","yyyy-MM-dd"); 
@@ -583,7 +617,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					String email = anagrafica.getEmail()==null?"":anagrafica.getEmail();
 					String emailPec = anagrafica.getEmailPec()==null?"":anagrafica.getEmailPec();
 					if (anaOut.getProgressivoFlusso() == null) {
-						debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH8");
+						logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH8");
 						//inizio LP PG200360
 						numeroRecord++;
 						//fine LP PG200360
@@ -601,7 +635,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						anaOut.setCodiceBelfioreComuneFiscale(anagrafica.getCodiceBelfioreComuneFiscale());
 						anaOut.setEmail(anagrafica.getEmail());
 						anaOut.setEmailPec(anagrafica.getEmailPec());
-						debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - updateAnagrafica");
+						logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - updateAnagrafica");
 						archivioCarichiDao.updateAnagrafica(anaOut);
 					}
 					
@@ -620,12 +654,12 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						if (configIUV.getCarattereServizio()!=null) carattereServizio = configIUV.getCarattereServizio();
 					}
 							
-					//Inserisco su EH0 solo se l'identificativo flusso o non è presente o non è stato elaborato
+					//Inserisco su EH0 solo se l'identificativo flusso o non  presente o non  stato elaborato
 					ArchivioCarichiTesta testaIn = prepareArchivioCarichiTesta(progressivoFlusso, in.getCodiceUtente());
 					ArchivioCarichiTesta testaOut = archivioCarichiDao.getTesta(testaIn);				
 					if (testaOut.getTipoRecord()==null) {
 						numeroRecord++;
-						debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH0");
+						logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH0");
 						elaborazioneFlussiDao.doInsertEH0(progressivoFlusso, "EH0", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), 
 								"PER", //procedura di gestione 
 								in.getTipoServizio(),
@@ -638,7 +672,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								segregationeCode,
 								carattereServizio //PG200140
 								);
-					} else {	//TODO da valutare il da farsi nel caso di EH0 già esistente
+					} else {	//TODO da valutare il da farsi nel caso di EH0 gi esistente
 						testaOut.setCodiceUtente(in.getCodiceUtente());
 						testaOut.setDataCreazioneFlusso(java.sql.Date.valueOf(dataFlusso));
 						archivioCarichiDao.updateTesta(testaOut);
@@ -646,20 +680,20 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					
 					
 					//EH9 Coda
-					//Inserisco su EH9 solo se l'identificativo flusso o non è presente o non è stato elaborato
+					//Inserisco su EH9 solo se l'identificativo flusso o non  presente o non  stato elaborato
 					ArchivioCarichiCoda codaIn = prepareArchivioCarichiCoda(progressivoFlusso, in.getCodiceUtente());
 					ArchivioCarichiCoda codaOut = archivioCarichiDao.getCoda(codaIn);
 					if (codaOut.getTipoRecord()==null) {
 						numeroRecord++;
-						debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH9");
+						logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH9");
 						elaborazioneFlussiDao.doInsertEH9(progressivoFlusso, "EH9", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), in.getTipoServizio(), numeroRecord, 'C');
-					} else {	//TODO da valutare il da farsi nel caso di EH9 già esistente
+					} else {	//TODO da valutare il da farsi nel caso di EH9 gi esistente
 						codaOut.setCodiceUtente(in.getCodiceUtente());
 						codaOut.setDataCreazioneFlusso(java.sql.Date.valueOf(dataFlusso));
 						//inizio LP PG200360
 						//NOTA. Non era giusto in caso di variazione aggiornare il numero di record.
 						//      Adesso che nell'operazione di cancellazione si aggiorna nel record
-						//      di coda il numero record lo si può fare.
+						//      di coda il numero record lo si pu fare.
 						//fine LP PG200360
 						codaOut.setNumeroRecordFlusso(codaOut.getNumeroRecordFlusso()+numeroRecord);	//TODO da verificare
 						archivioCarichiDao.updateCoda(codaOut);
@@ -682,7 +716,248 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						throw ex;
 					}
 				}
-        	}	
+        	}
+        	
+        	// SR PGNTACWS-2 inizio
+			// SE ARRIVO QUA, L'INSERIMENTO SU PAGONET E' OK 
+        	if(propertiesTree().getProperty(PropKeys.servizioJppa.format()) != null && propertiesTree().getProperty(PropKeys.servizioJppa.format()).equals("Y")) {
+        		InviaDovutiDao dao = new InviaDovutiDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
+    			String codiceIpaComune = "";
+    			codiceIpaComune = dao.getCodiceIpa(in.getListTributi(0).getIdentificativoDominio(), in.getCodiceEnte());
+    			
+    			CaricaDebitiJppa jppa = new CaricaDebitiJppa();
+    			String token = jppa.login(propertiesTree().getProperty(PropKeys.username.format()), propertiesTree().getProperty(PropKeys.password.format()), codiceIpaComune);
+    			
+    			if (codiceIpaComune.equals("")) {
+    				System.err.println("Codice ipa non trovato per id dominio: " + in.getListTributi(0).getIdentificativoDominio() + "ed ente: " + in.getCodiceEnte() + ". Impossibile inviare dovuto.");
+    			} else {
+    				
+    				this.estrattoContoDao = new EstrattoContoDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
+    	
+    				String listXml = "";		
+    				String[] sEsito = estrattoContoDao.doCachedRowSetList(in.getCodiceUtente(), in.getCodiceEnte(), "", "",
+    						in.getAnagrafica().getCodiceFiscale(), in.getTipoServizio(), "I", "", "", in.getDocumento().getNumeroDocumento(), "", "D", "", "",
+    						BigDecimal.ZERO, "", "", "", "", BigDecimal.ZERO, "",
+    						BigDecimal.ZERO, "", "");
+    				
+    				listXml = estrattoContoDao.getWebRowSetXml(EstrattoContoDao.IDX_DOLIST_LISTA);
+    				if (listXml.length() != 0) {
+    					ecCached = Convert.stringToWebRowSet(listXml);
+    					if (ecCached.size() > 0) {
+    						boolean bFoundResult = false;
+    						while (ecCached.next() && !bFoundResult) {
+    							String cittaEstesa = ecCached.getString(53)
+    									+ (ecCached.getString(53) != null && ecCached.getString(53).trim().length() > 0 ? " " : "")
+    									+ ecCached.getString(52)
+    									+ (ecCached.getString(54) != null && ecCached.getString(54).trim().length() > 0 ? " (" + ecCached.getString(54) + ")" : "");
+    							TipoBollettino tipoBollettino = new TipoBollettino(
+    									"", 
+    									ecCached.getString(10), 
+    									ecCached.getString(11), 
+    									"", 
+    									"00010101",
+    									ecCached.getString(22), 
+    									ecCached.getString(5), 
+    									ecCached.getString(51), 
+    									cittaEstesa, 
+    									"",
+    									ecCached.getString(48), 
+    									null, null);
+
+    							pgResponse = new RecuperaDatiBollettinoResponse(
+    									in.getCodiceUtente(), 
+    									in.getCodiceEnte(),
+    									in.getTipoUfficio(), 
+    									in.getCodiceUfficio(), 
+    									"", 
+    									in.getRuolo().getCodiceTipologiaServizio(),
+    									ecCached.getString(9), 
+    									ecCached.getString(21), 
+    									ecCached.getBigDecimal(47) == null ? 0 : ecCached.getBigDecimal(47).multiply(new BigDecimal(100)).longValue(), 
+    									"",
+    									"",
+    									0, 
+    									"",
+    									0, 
+    									"",
+    									getCurrentDate(), 
+    									isValidResult(sEsito) ? "00" : "01", 
+    									sEsito[1], 
+    									tipoBollettino, 
+    									in.getDocumento().getIdentificativoUnivocoVersamento(),
+    									ecCached.getString(50));
+
+    							pgResponse.setTassonomia(ecCached.getString(57) == null ? "" : ecCached.getString(57));
+
+    							try {
+    								listXmlDP = estrattoContoDao.getWebRowSetXml("1"); // datiPagamento
+    							} catch (Exception e) {}
+    							if (listXmlDP != null && listXmlDP.length() > 0)
+    								try {
+    									ecCachedDettaglioPagamento = Convert.stringToWebRowSet(listXmlDP);
+    								} catch (SQLException e) {}
+    							try {
+    								listXmlDC = estrattoContoDao.getWebRowSetXml("2"); // datiContabili
+    							} catch (Exception e) {}
+    							if (listXmlDC != null && listXmlDC.length() > 0) {
+    								try {
+    									ecCachedDettaglioContabile = Convert.stringToWebRowSet(listXmlDC);
+    								} catch (SQLException e) {}
+
+    								extendDatiContabileEPagamento(pgResponse, ecCached, ecCachedDettaglioPagamento,
+    										ecCachedDettaglioContabile,
+    										in.getConfigurazione().getConfigurazioneIUV().getIdentificativoDominio(), 0);
+    								bFoundResult = true;
+    							}
+    						}
+    						
+    						String codiceIpaProvincia = "";
+    						if(Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario())) {
+    							codiceIpaProvincia = dao.getCodiceIpa(in.getListTributi(1).getIdentificativoDominio(), in.getCodiceEnte());
+    						}
+    						
+    						List<DovutoDto> dovutiList = new ArrayList<>();
+    						
+    						// Se il bollettino è multirata, invio le rate come dovuti separati
+    						if (in.getListScadenze().length > 1) {
+
+    							List<DettaglioDovutoDto> dettaglioList = new ArrayList<>();
+    							int progressivo = 1;
+
+    							for(Scadenza scadenza : in.getListScadenze()) {																						     								
+    								DatoAccertamentoDto datoAccertamento = new DatoAccertamentoDto(
+											pgResponse.getAnagraficaBollettino().getAnnoDocumento(), 
+											CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio()).getValue(), 
+											"", // descrizione
+											BigDecimal.valueOf(scadenza.getImpBollettinoRata().doubleValue() / 100D)); 
+									
+									DettaglioDovutoDto dettaglio = new DettaglioDovutoDto(
+											pgResponse.getCausale() + ", rata " + scadenza.getNumeroRata(),
+											pgResponse.getFlagMultiBeneficiario() ? (progressivo == 1 ? "c_g479" : "p_PU") : codiceIpaComune, 
+											"codiceLotto",
+											CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio()),
+											OffsetDateTime.parse(new Date(scadenza.getDataScadenzaRata()).toInstant().atOffset(ZoneOffset.UTC).toString(),DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+											OffsetDateTime.parse(Calendar.getInstance().getTime().toInstant().atOffset(ZoneOffset.UTC).toString(),DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+											null,
+											Arrays.asList(datoAccertamento),
+											"multirata",
+											scadenza.getIdentificativoUnivocoVersamento()+scadenza.getNumeroRata(),
+											scadenza.getImpBollettinoRata().doubleValue() / 100D,
+											null, // BigDecimal importo spese di notifica
+											null, // MarcaDaBolloDto									
+											progressivo,	
+											null, // List<ParametroDebitoDto>
+											SpeseNotificaDaAttualizzareEnum.OFF  // SpeseNotificaDaAttualizzareEnum
+											);								
+
+    								dettaglioList.add(dettaglio);
+    								progressivo++;							
+    							}
+    							
+    							ContribuenteDto contribuente = new ContribuenteDto(
+    									"", // cap
+    									"", // civico
+    									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().toUpperCase(), 
+    									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() >= 16 ? anagrafica.getDenominazione() : null, // cognome=nome+cognome
+    									anagrafica.getEmail() != null ? anagrafica.getEmail() : null, // email
+    									anagrafica.getIndirizzoFiscale() != null ? anagrafica.getIndirizzoFiscale() : null, // indirizzo
+    									"", // localita
+    									"", // nazione
+    									"", // nome
+    									"", // provincia
+    									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? anagrafica.getDenominazione() : null, // ragioneSociale
+    									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? TipoIdentificativoUnivocoEnum.GIURID : TipoIdentificativoUnivocoEnum.FIS 
+    									);
+    							
+    							TestataDovutoDto testata = new TestataDovutoDto(
+    									contribuente, 
+    									documento.getCausale(), 
+    									documento.getIdentificativoUnivocoVersamento()+documento.getNumeroDocumento()); 
+    							
+    							NumeroAvvisoDto numeroAvvisoDto = new NumeroAvvisoDto(true, pgResponse.getAnagraficaBollettino().getNumeroDocumento(), 1);
+
+    							DovutoDto dovuto = new DovutoDto(
+    									Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario()) ? ContestoDovutoEnum.MULTIBENEFICIARIO : ContestoDovutoEnum.MONOBENEFICIARIO,
+    									dettaglioList,
+    									numeroAvvisoDto, 
+    									testata);   						
+    							dovutiList.add(dovuto);
+    						} 
+    						// Se il bollettino è multirata o se è soluzione unica, invio un dovuto con l'importo totale.
+//    						DovutoDto dovuto = new DovutoDto(pgResponse, codiceIpaComune, codiceIpaProvincia, Arrays.asList(in.getListTributi()), in.getAnagrafica()); 
+    						
+    						List<DettaglioDovutoDto> dettaglioList = new ArrayList<>();
+							int progressivo = 1;
+    						for(Tributo tributo : Arrays.asList(in.getListTributi())){
+    							
+								DatoAccertamentoDto datoAccertamento = new DatoAccertamentoDto(
+										tributo.getAnnoTributo(), 
+										CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio()).getValue(), 
+										"", // descrizione
+										BigDecimal.valueOf(tributo.getImpTributo().doubleValue() / 100D)); 
+								
+								DettaglioDovutoDto dettaglio = new DettaglioDovutoDto(
+										pgResponse.getCausale(),
+										Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario()) ? (progressivo == 1 ? codiceIpaComune : codiceIpaProvincia) : codiceIpaComune, 
+										"codiceLotto",
+										CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio()),
+										null,
+										OffsetDateTime.parse(Calendar.getInstance().getTime().toInstant().atOffset(ZoneOffset.UTC).toString(),DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+										null,
+										Arrays.asList(datoAccertamento),
+										"unica",
+										pgResponse.getIdentificativoUnivocoVersamento()+pgResponse.getIdentificativoBollettino(),
+										tributo.getImpTributo().doubleValue() / 100D,
+										null, // BigDecimal importo spese di notifica
+										null, // MarcaDaBolloDto									
+										progressivo,	
+										null, // List<ParametroDebitoDto>
+										SpeseNotificaDaAttualizzareEnum.OFF  // SpeseNotificaDaAttualizzareEnum
+										);				
+											
+								progressivo++;
+								dettaglioList.add(dettaglio);
+    						}
+    						
+							ContribuenteDto contribuente = new ContribuenteDto(
+									"", // cap
+									"", // civico
+									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().toUpperCase(), 
+									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() >= 16 ? anagrafica.getDenominazione() : null, // cognome=nome+cognome
+									anagrafica.getEmail() != null ? anagrafica.getEmail() : null, // email
+									anagrafica.getIndirizzoFiscale() != null ? anagrafica.getIndirizzoFiscale() : null, // indirizzo
+									"", // localita
+									"", // nazione
+									"", // nome
+									"", // provincia
+									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? anagrafica.getDenominazione() : null, // ragioneSociale
+									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? TipoIdentificativoUnivocoEnum.GIURID : TipoIdentificativoUnivocoEnum.FIS 
+									);
+							
+							TestataDovutoDto testata = new TestataDovutoDto(
+									contribuente, 
+									documento.getCausale(), 
+									documento.getIdentificativoUnivocoVersamento()+documento.getNumeroDocumento()); 
+							
+							NumeroAvvisoDto numeroAvvisoDto = new NumeroAvvisoDto(true, pgResponse.getIdentificativoBollettino(), 1);
+
+							DovutoDto dovuto = new DovutoDto(
+									Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario()) ? ContestoDovutoEnum.MULTIBENEFICIARIO : ContestoDovutoEnum.MONOBENEFICIARIO,
+									dettaglioList, 
+									numeroAvvisoDto, 
+									testata);   						
+							
+    						dovutiList.add(dovuto);
+    					    						
+    						RispostaInviaDovutiDto res = jppa.inviaDovuti(token, codiceIpaComune, dovutiList); // codiceIpaComune
+    						if(res != null) {
+    							dao.aggiornaFlagInviaDovuto(progressivoFlussoPerInviaDovuti, getSchemaDifferito(dbSchemaCodSocieta)); 							
+    						}
+    					}
+    				}				
+    				// SR PGNTACWS-2 fine
+    			}
+        	}
         } catch (ConfigurazioneException e) {	
 			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC failed, configuration error due to: ", e);
 			response.setCodiceEsito("02");
@@ -722,19 +997,20 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				} catch (IOException e1) {
 				}
 				//fine LP PG22XX05
-				debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - response: " + xmlString);
+				logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - response: " + xmlString);
 	    	}
 		}
-		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - fine");
+		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - fine");
 		return response;
     }
 
 	//inizio LP PG200360
-    @SuppressWarnings("unused")
+    @Override
+	@SuppressWarnings("unused")
 	//fine LP PG200360
 	public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.VariazioneEcResponse variazioneEC(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.VariazioneEcRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
     	ClearVariazioneEC(in); //LP PG22XX05
-    	debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - inizio");
+    	logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - inizio");
     	VariazioneEcResponse response = new VariazioneEcResponse(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), "", "", in.getDocumento());
     	Connection connection = null;
     	StringWriter sw = new StringWriter();
@@ -747,7 +1023,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 		}
 		sw = null;
 		//fine LP PG22XX05
-		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - request: " + xmlString);
+		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - request: " + xmlString);
     	try {
     		dbSchemaCodSocieta = in.getCodiceUtente();
     		connection = getConnectionDifferito(dbSchemaCodSocieta);
@@ -768,7 +1044,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			bModalitaAgggiornamento = bStampaAvvisoEseguita && bFlagStampaAvvisoNo; 
 			
         	if(bModalitaAgggiornamento) {
-    			debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - documento con modalità 'cancellazione-inserimento con modifica solo tassonomia e/o importi'");
+    			logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - documento con modalit 'cancellazione-inserimento con modifica solo tassonomia e/o importi'");
         		String codiceSocieta = "";
 				String chiaveFlusso = "";
 				String codiceTipoServizio = "EP";
@@ -799,7 +1075,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					bImportoVar = true;
 				}
 				documentoDB.setImpBollettinoTotaleDocumento(newImp);
-    			debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - controllo su variazioni consentite");
+    			logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - controllo su variazioni consentite");
 				if(!documentoDB.equals(documentoEx)) {
 					throw new ValidazioneException("Richiesta non ammessa ci sono modifiche non consentite sul documento");						
 				}
@@ -874,16 +1150,16 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				}
         		//NOTA. si procede anche in mancaza di modifiche
         	} else if(bStampaAvvisoEseguita) {
-    			debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - documento con modalità 'cancellazione-inserimento con modifiche varie e nuovo idflusso'");
+    			logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - documento con modalit 'cancellazione-inserimento con modifiche varie e nuovo idflusso'");
         		//NOTA. si procede anche in mancaza di modifiche
         	} else {
-    			debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - documento con modalità 'cancellazione-inserimento' standard");
+    			logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - documento con modalit 'cancellazione-inserimento' standard");
         		//NOTA. si procede anche in mancaza di modifiche
         	}
         	//fine LP PG200360
 	    	        	
         	//Verifica input
-			debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - checkRequest");
+			logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - checkRequest");
         	boolean resCheck = checkRequest(in.getCodiceUtente(), in.getCodiceEnte(), in.getConfigurazione(), in.getDocumento(), in.getListScadenze(), in.getListTributi(), in.getAnagrafica() , "V");
         	if (resCheck) {
 				//inizio LP PG210130
@@ -903,7 +1179,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				}
 				//fine LP PG210130 Step03
         		//29012021 GG - inserimento verifica su stampa avviata - inizio
-            	//Non è ammessa la variazione se il documento è su un flusso in stampa o stampato
+            	//Non  ammessa la variazione se il documento  su un flusso in stampa o stampato
             	//inizio LP PG200360
             	//ArchivioCarichiDocumento docIn = prepareArchivioCarichiDocumento(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), in.getDocumento().getNumeroDocumento());
             	//String flagStampa = archivioCarichiDao.getFlagStampa(docIn);
@@ -918,21 +1194,21 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				//String fileNameToElab = "AC" + in.getCodiceUtente() + GenericsDateNumbers.calendarToString(calCurrentDate, "yyyyMMddHHmmssSSS") + ".txt";	//maxlength 50
         		
         		//Dicembre 2020 - Controllo per inserimento idFlusso su enti diversi - TK: 2020121088000104 
-        		//Aggiungo il flag "_§v" al nome del flusso per distinguere la variazione
-				String fileNameToElab =  in.getConfigurazione().getIdentificativoFlusso() + "_§v";
+        		//Aggiungo il flag "_v" al nome del flusso per distinguere la variazione
+				String fileNameToElab =  in.getConfigurazione().getIdentificativoFlusso() + "_v";
 				
         		in.getConfigurazione().setIdentificativoFlusso(fileNameToElab);
 	        	//Nel caso risultino discarichi per il documento non sono ammesse variazioni 
 		    	ArchivioCarichiMovimento movIn = prepareArchivioCarichiMovimento(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), in.getDocumento().getNumeroDocumento(), 0, "D");
 		    	ArchivioCarichiMovimento movOut = archivioCarichiDao.getMovimento(movIn);
 		    	if (movOut.getProgressivoFlusso() != null) {
-		    		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC non ammessa per presenza discarichi su posizione debitoria");
+		    		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC non ammessa per presenza discarichi su posizione debitoria");
 					response.setCodiceEsito("07");
 					response.setMessaggioEsito("Richiesta non ammessa per presenza discarichi su posizione debitoria");
 		    	} else {
 			    	//Prima cancello poi inserisco
 			    	//Attualmente qualora la configurazione preveda la generazione dei codici iuv, nuovi codici iuv sono generati
-		    		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - cancellazione posizione debitoria originaria");
+		    		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - cancellazione posizione debitoria originaria");		    		
 			    	CancellazioneEcRequest cancReq = new CancellazioneEcRequest(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), in.getDocumento().getNumeroDocumento());
 			    	CancellazioneEcResponse cancRes = cancellazioneEC(cancReq);
 			    	if (cancRes.getCodiceEsito().equals("00")) {
@@ -942,10 +1218,10 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			    		if(bModalitaAgggiornamento || bStampaAvvisoEseguita) {
 			    			String newidflusso = getNewIdentificativoFlusso(in.getCodiceUtente());
 			    			in.getConfigurazione().setIdentificativoFlusso(newidflusso);
-				    		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - inserimento posizione debitoria variata su nuovo flusso: '" + newidflusso + "'");
+				    		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - inserimento posizione debitoria variata su nuovo flusso: '" + newidflusso + "'");
 			    		} else
 			    		//fine LP PG200360
-			    		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - inserimento posizione debitoria variata");
+			    		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - inserimento posizione debitoria variata");
 				    	InserimentoEcRequest insReq = new InserimentoEcRequest(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), in.getConfigurazione(), in.getRuolo(), in.getDocumento(), in.getAnagrafica(), in.getListScadenze(), in.getListTributi());
 				    	InserimentoEcResponse insRes = inserimentoEC(insReq);
 				    	response.setCodiceEsito(insRes.getCodiceEsito());
@@ -961,11 +1237,11 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			response.setCodiceEsito("02");
 			response.setMessaggioEsito(e.getMessage());	//"Configurazione errata"
         } catch (ValidazioneException e) {
-			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC failed, validation error due to: ", e);
+        	error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC failed, validation error due to: ", e);
 			response.setCodiceEsito("04");
 			response.setMessaggioEsito(e.getMessage());	//"Errore di validazione"
     	} catch (Exception e) {
-			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC failed, generic error due to: ", e);
+    		error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC failed, generic error due to: ", e);
 			response.setCodiceEsito("01");
 			response.setMessaggioEsito("Errore generico");
 		} finally {
@@ -991,16 +1267,17 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				}
 				sw = null;
 				//fine LP PG22XX05
-				debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - response: " + xmlString);
+				logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - response: " + xmlString);
 	    	}
 			//fine LP PG21XX04 Leak
 		}
-    	debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - fine");
+    	logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - fine");
     	return response;
     }
 
-    public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.CancellazioneEcResponse cancellazioneEC(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.CancellazioneEcRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
-    	debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC - inizio");
+    @Override
+	public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.CancellazioneEcResponse cancellazioneEC(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.CancellazioneEcRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
+    	logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC - inizio");
     	System.out.println("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC - inizio");
     	System.out.println("Codice Ente: " + in.getCodiceEnte() );
     	System.out.println("Codice Utente: " + in.getCodiceUtente());
@@ -1023,7 +1300,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 		}
 		sw = null;
 		//fine LP PG22XX05
-		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC - request: " + xmlString);
+		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC - request: " + xmlString);
     	try {
     		dbSchemaCodSocieta = in.getCodiceUtente();
     		connection = getConnectionDifferito(dbSchemaCodSocieta);
@@ -1036,8 +1313,11 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 //				throw new NotFoundException("Posizione debitoria non presente in archivio");	
 //			} else {
 			//Verifico se sussistono pagamenti correlati alla posizione debitoria
+    		
+			String numeroAvvisoDaCancellare = archivioCarichiDao.getDocumento(docIn).getNumeroBollettinoPagoPA();
+	
 			estrattoContoDao = new EstrattoContoDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
-			debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC - doCachedRowAcquisizioneTransazioni - verifica presenza pagamenti su posizione debitoria");
+			logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC - doCachedRowAcquisizioneTransazioni - verifica presenza pagamenti su posizione debitoria");
 			//20220808 SB - inizio
 			String[] sEsito;
 			if(dbSchemaCodSocieta.equals("000P4"))
@@ -1055,16 +1335,28 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				//fine LP PG21XX04 Leak
 				if (ecCached.size() > 0)
 				{
-					debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC non ammessa per presenza pagamenti su posizione debitoria");
+					logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC non ammessa per presenza pagamenti su posizione debitoria");
 					response.setCodiceEsito("06");
 					response.setMessaggioEsito("Richiesta non ammessa per presenza pagamenti");
 				} else {
 					//Cancellazione posizione debitoria in assenza di pagamenti associati
-					debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC - deleteDocumento - cancellazione posizione debitoria");
+					logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC - deleteDocumento - cancellazione posizione debitoria");
 		        	String retMessage = archivioCarichiDao.deleteDocumento(docIn);
 		        	if (retMessage.equals("")) {
 						response.setCodiceEsito("00");
 			    		response.setMessaggioEsito("Richiesta eseguita con successo");
+			    		
+			    		// inizio SR PGNTACWS-2
+			        	if(propertiesTree().getProperty(PropKeys.servizioJppa.format()) != null && propertiesTree().getProperty(PropKeys.servizioJppa.format()).equals("Y")) {
+				    		CaricaDebitiJppa jppa = new CaricaDebitiJppa();
+							InviaDovutiDao dao = new InviaDovutiDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
+							String codiceIpaComune = "";
+							codiceIpaComune = dao.getCodiceIpa(in.getCodiceUtente(), in.getCodiceEnte());
+							
+							String token = jppa.login(propertiesTree().getProperty(PropKeys.username.format()), propertiesTree().getProperty(PropKeys.password.format()), codiceIpaComune);
+							jppa.cancellaDovuto(token, codiceIpaComune, numeroAvvisoDaCancellare);  						
+			        	}
+			        	// fine SR PGNTACWS-2
 		        	} else {
 		        		throw new NotFoundException("Posizione debitoria non presente in archivio");
 		        	}
@@ -1077,11 +1369,11 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 //			}
     		
     	} catch (NotFoundException e) {
-			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC failed, not found error due to: ", e);
+    		error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC failed, not found error due to: ", e);
 			response.setCodiceEsito("05");
 			response.setMessaggioEsito(e.getMessage());
     	} catch (Exception e) {
-			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC failed, generic error due to: ", e);
+    		error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC failed, generic error due to: ", e);
 			response.setCodiceEsito("01");
 			response.setMessaggioEsito("Errore generico");
 		} finally {
@@ -1115,15 +1407,16 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				}
 				sw = null;
 				//fine LP PG22XX05
-				debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC - response: " + xmlString);
+				logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC - response: " + xmlString);
 	    	}
 		}
-		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC - fine");
+		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC - fine");
     	return response;
     }
 
-    public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.DiscaricoEcResponse discaricoEC(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.DiscaricoEcRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
-    	debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC - inizio");
+    @Override
+	public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.DiscaricoEcResponse discaricoEC(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.DiscaricoEcRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
+    	logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC - inizio");
     	DiscaricoEcResponse response = new DiscaricoEcResponse(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), "", "", in.getDocumento().getNumeroDocumento());
     	Connection connection = null;
     	StringWriter sw = new StringWriter();
@@ -1136,7 +1429,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 		}
 		sw = null;
 		//fine LP PG22XX05
-		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC - request: " + xmlString);
+		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC - request: " + xmlString);
 		//inizio LP PG210130
 		boolean bOperazioneEseguita = false;
 		//fine LP PG210130
@@ -1173,7 +1466,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 		    		java.sql.Date dataFlusso = null; 
 		    		//fine LP PG210130
 					for(Tributo tributo : in.getListTributi()) {
-						debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC - getTributo codice/anno/progressivo tributo: " + tributo.getCodiceTributo()+"/"+tributo.getAnnoTributo()+"/"+tributo.getProgressivoTributo());
+						logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC - getTributo codice/anno/progressivo tributo: " + tributo.getCodiceTributo()+"/"+tributo.getAnnoTributo()+"/"+tributo.getProgressivoTributo());
 						ArchivioCarichiTributo tribIn = prepareArchivioCarichiTributo(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), documento.getNumeroDocumento(), tributo.getCodiceTributo(), tributo.getAnnoTributo(), tributo.getProgressivoTributo());
 						ArchivioCarichiTributo tribOut = archivioCarichiDao.getTributo(tribIn);
 						if (tribOut.getProgressivoFlusso() == null) {
@@ -1218,7 +1511,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							if(dataFlusso == null)
 								dataFlusso = (java.sql.Date) tribOut.getDataCreazioneFlusso();
 				    		//fine LP PG210130
-							//Selezione max progressivo movimento a parità di documento a partire da 1
+							//Selezione max progressivo movimento a parit di documento a partire da 1
 							int progPagamento = archivioCarichiDao.getProgressivoPagamento(docIn);
 							   
 							elaborazioneFlussiDao.doInsertEH3(tribOut.getProgressivoFlusso().intValue(), "EH3", tribOut.getCodiceUtente(), (java.sql.Date)tribOut.getDataCreazioneFlusso(), tribOut.getTipoServizio(), tribOut.getCodiceEnte(), tribOut.getTipoUfficio(), tribOut.getCodiceUfficio(), 
@@ -1263,16 +1556,16 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
     		response.setMessaggioEsito("Richiesta eseguita con successo");
     		bOperazioneEseguita = true;
     	} catch (NotFoundException e) {
-			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC failed, not found error due to: ", e);
+    		error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC failed, not found error due to: ", e);
 			response.setCodiceEsito("05");
 			response.setMessaggioEsito(e.getMessage());
     	} catch (ValidazioneException e) {
-			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC failed, validation error due to: ", e);
+    		error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC failed, validation error due to: ", e);
 			response.setCodiceEsito("04");
 			response.setMessaggioEsito(e.getMessage());	
     	} catch (Exception e) {
     		e.printStackTrace();
-			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC failed, generic error due to: ", e);
+    		error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC failed, generic error due to: ", e);
 			response.setCodiceEsito("01");
 			response.setMessaggioEsito("Errore generico");
 		} finally {
@@ -1303,16 +1596,17 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				}
 				sw = null;
 				//fine LP PG22XX05
-				debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC - response: " + xmlString);
+				logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC - response: " + xmlString);
 	    	}
 		}
     
-		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC - fine");
+		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - discaricoEC - fine");
     	return response;
     }
 
-    public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.RichiestaAvvisoPagoPaResponse richiestaAvvisoPagoPa(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.RichiestaAvvisoPagoPaRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
-    	debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - richiestaAvvisoPagoPa - inizio");
+    @Override
+	public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.RichiestaAvvisoPagoPaResponse richiestaAvvisoPagoPa(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.RichiestaAvvisoPagoPaRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
+    	logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - richiestaAvvisoPagoPa - inizio");
 //    	System.out.println("com.esed.payer.archiviocarichi.webservice.integraecdifferito - richiestaAvvisoPagoPa - inizio");
 //    	System.out.println("Codice Utente: " + in.getCodiceUtente());
 //    	System.out.println("Tipo Servizio: " + in.getTipoServizio());
@@ -1333,12 +1627,12 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 		}
 		sw = null;
 		//fine LP PG22XX05
-		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - richiestaAvvisoPagoPA - request: " + xmlString);
-    	debug("Codice Utente: " + in.getCodiceUtente());
-    	debug("Codice Ente: " + in.getCodiceEnte());
-    	debug("Numero Documento: " + in.getStampaDocumento().getNumeroDocumento());
-    	debug("Codice Fiscale: " + in.getStampaDocumento().getCodiceFiscale());
-    	debug("Codice Imposta Servizio: " + in.getImpostaServizio());
+		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - richiestaAvvisoPagoPA - request: " + xmlString);
+    	logger.debug("Codice Utente: " + in.getCodiceUtente());
+    	logger.debug("Codice Ente: " + in.getCodiceEnte());
+    	logger.debug("Numero Documento: " + in.getStampaDocumento().getNumeroDocumento());
+    	logger.debug("Codice Fiscale: " + in.getStampaDocumento().getCodiceFiscale());
+    	logger.debug("Codice Imposta Servizio: " + in.getImpostaServizio());
     	
     	String path = "";
     	ArrayList<Flusso> listaFlussi = new ArrayList<Flusso>();
@@ -1379,7 +1673,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			//fine LP PG200360
 			callableStatement.execute();
 			//inizio LP PG200360
-			//debug("richiestaAvvisoPagoPa - PY512SP_AVVI_WS - returnCode: " + callableStatement.getInt(5));
+			//logger.debug("richiestaAvvisoPagoPa - PY512SP_AVVI_WS - returnCode: " + callableStatement.getInt(5));
 			//fine LP PG200360
 			String targetPdfPath = "";
 			//inizio LP PG200360
@@ -1391,10 +1685,10 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			int retCodeSp = callableStatement.getInt(7);
 			String retMessageSp = callableStatement.getString(8);
 			//PG22XX01_GG1 - fine
-			debug("richiestaAvvisoPagoPa - PY512SP_AVVI_WS - returnCode: " + retCodeSp);
+			logger.debug("richiestaAvvisoPagoPa - PY512SP_AVVI_WS - returnCode: " + retCodeSp);
 			//fine LP PG200360
 			if (retCodeSp==0){ //MAI STAMPATO ... CREA XML
-				debug("richiestaAvvisoPagoPa - Non esiste PDF nella basedati");
+				logger.debug("richiestaAvvisoPagoPa - Non esiste PDF nella basedati");
 				
 				resultSet= callableStatement.getResultSet();
 
@@ -1402,12 +1696,12 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					flagDocumentoDisponibile = true;
 					Long impTotaleDocumentoIn = Long.valueOf(in.getStampaDocumento().getImportoTotaleDocumento());
 					Long impTotaleDocumentoDb = Long.valueOf(resultSet.getString("DOC_IMPORTO_TOTALE"));
-					debug("richiestaAvvisoPagoPa - impTotaleDocumentoIn = " + impTotaleDocumentoIn);
-					debug("richiestaAvvisoPagoPa - impTotaleDocumentoDb = " + impTotaleDocumentoDb);
+					logger.debug("richiestaAvvisoPagoPa - impTotaleDocumentoIn = " + impTotaleDocumentoIn);
+					logger.debug("richiestaAvvisoPagoPa - impTotaleDocumentoDb = " + impTotaleDocumentoDb);
 					
 					if (impTotaleDocumentoIn.compareTo(impTotaleDocumentoDb)!=0)
 						throw new ValidazioneException("Importo totale del documento non congruente");
-					debug("richiestaAvvisoPagoPa - Elaborazione resultset");
+					logger.debug("richiestaAvvisoPagoPa - Elaborazione resultset");
 					// primo avviso con tutte le colonne Debitore/Docum/Avviso
 					     targetPdfPath = resultSet.getString("FLU_FOLDER");
 				         curFlusso = GeosUtil.extractFlusso(resultSet);
@@ -1471,26 +1765,26 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				         
 						switch (generatorePdf) {
 							case "GEOS":
-								debug("richiestaAvvisoPagoPa - Interrogazione WS GEOS");
+								logger.debug("richiestaAvvisoPagoPa - Interrogazione WS GEOS");
 								String urlWsGeos = propertiesTree().getProperty(PropKeys.urlWSRestGeos.format(in.getCodiceUtente()));
 								// inizio LP - mail Giorgia 20200608
 								// if
 								// (WSRest_GEOS.callWSRest_GEOS(curFlusso,targetPdfPath,dbSchemaCodSocieta,urlWsGeos)){
-								debug("urlGeos da config: " + urlWsGeos);
+								logger.debug("urlGeos da config: " + urlWsGeos);
 								if (urlWsGeos == null || urlWsGeos.trim().length() == 0) {
 									urlWsGeos = GeosUtil.getUrlRestGeos(dbSchemaCodSocieta);
-									debug("urlGeos da getUrlRestGeos: " + urlWsGeos);
+									logger.debug("urlGeos da getUrlRestGeos: " + urlWsGeos);
 								}
 								if (WSRest_GEOS.callWSRest_GEOS(curFlusso, targetPdfPath, urlWsGeos)) {
 									// fine LP - mail Giorgia 20200608
 									path = targetPdfPath;
 								} else {
-									debug("richiestaAvvisoPagoPa - Errore chiamata WS GEOS");
+									logger.debug("richiestaAvvisoPagoPa - Errore chiamata WS GEOS");
 									throw new Exception("Impossibile eseguire la stampa dell'avviso");
 								}
 								break;
 							case "WSPDF":
-								debug("richiestaAvvisoPagoPa - Interrogazione WSPDF");
+								logger.debug("richiestaAvvisoPagoPa - Interrogazione WSPDF");
 								String urlWsPdf = propertiesTree().getProperty(PropKeys.urlWSRestPdf.format(in.getCodiceUtente()));
 								if(in.getCodiceUtente().equals("000RM")
 										|| in.getCodiceUtente().equals("000LP")) {
@@ -1498,7 +1792,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								}else if(in.getCodiceUtente().equals("000P6")) {
 									urlWsPdf += "Bolzano";
 								}
-								debug("urlPdf da config: " + urlWsPdf);
+								logger.debug("urlPdf da config: " + urlWsPdf);
 								if (urlWsPdf == null || urlWsPdf.trim().length() == 0) {
 									throw new Exception("Mancata configurazione url WSPDF");
 								}
@@ -1514,7 +1808,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 										File file = new File(targetPdfPath);
 										FileUtils.writeByteArrayToFile(file, ba);
 									} else {
-										debug("richiestaAvvisoPagoPa - Errore chiamata WS PDF");
+										logger.debug("richiestaAvvisoPagoPa - Errore chiamata WS PDF");
 										throw new Exception("Impossibile eseguire la stampa dell'avviso");
 									}
 									
@@ -1529,8 +1823,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					}
 				} else {	//retcode diverso da zero
 					if (retCodeSp==1) {
-						debug("richiestaAvvisoPagoPa - Trovato PDF in base dati ottico interno");
-						// Il PDF esiste ed è stato creato precedentemente dalla fase batch
+						logger.debug("richiestaAvvisoPagoPa - Trovato PDF in base dati ottico interno");
+						// Il PDF esiste ed  stato creato precedentemente dalla fase batch
 						resultSet= callableStatement.getResultSet();
 						String pathFile = "";
 						String fileName ="";
@@ -1579,15 +1873,15 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				throw new NotFoundException("Documento non presente a sistema");
 			}
     	} catch (ConfigurazioneException e) {	
-			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - richiestaAvvisoPagoPa failed, configuration error due to: ", e);
+    		error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - richiestaAvvisoPagoPa failed, configuration error due to: ", e);
 			response.setCodiceEsito("02");
 			response.setMessaggioEsito(e.getMessage());	//"Configurazione errata"
         } catch (ValidazioneException e) {
-			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - richiestaAvvisoPagoPa failed, validation error due to: ", e);
+        	error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - richiestaAvvisoPagoPa failed, validation error due to: ", e);
 			response.setCodiceEsito("04");
 			response.setMessaggioEsito(e.getMessage());	//"Errore di validazione"	
     	} catch (NotFoundException e) {
-			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - richiestaAvvisoPagoPa failed, not found error due to: ", e);
+    		error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - richiestaAvvisoPagoPa failed, not found error due to: ", e);
 			response.setCodiceEsito("03");
 			response.setMessaggioEsito(e.getMessage());	//"Documento non presente a sistema"
 		} catch (Exception e) {
@@ -1641,14 +1935,14 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				}
 				sw = null;
 				//fine LP PG22XX05
-				debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - stampaAvvisoPagoPA - response: " + xmlString);
+				logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - stampaAvvisoPagoPA - response: " + xmlString);
 	    	}
 		}	
-    	//16022021 GG - funzionalità momentaneamente inibita - inizio
+    	//16022021 GG - funzionalit momentaneamente inibita - inizio
 //    	response.setCodiceEsito("01");
-//    	response.setMessaggioEsito("Funzionalità momentaneamente non disponibile");
-    	//16022021 GG - funzionalità momentaneamente inibita - fine
-    	debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - richiestaAvvisoPagoPa - fine");
+//    	response.setMessaggioEsito("Funzionalit momentaneamente non disponibile");
+    	//16022021 GG - funzionalit momentaneamente inibita - fine
+    	logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - richiestaAvvisoPagoPa - fine");
 		return response;
     }
     
@@ -1670,7 +1964,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	    	if (auxDigitConfig.equals("")) {
 	    		System.out.println("AuxDigit non impostato su file di configurazione per codUtente "+codiceUtente+" e idDominio "+configurazione.getConfigurazioneIUV().getIdentificativoDominio());
 				System.out.println("Recupero AuxDigit dal DB");
-				//se non è stato impostato l'auxdigit su file di configurazione controllo se esiste la configurazione sul db
+				//se non  stato impostato l'auxdigit su file di configurazione controllo se esiste la configurazione sul db
 				// se chiaveEnte = "" significa che la configurazione non esiste sul DB
 	    		if(!configurazioneModello3.getChiaveEnte().equals("")) {
 	    			auxDigitConfig = configurazioneModello3.getAuxDigit();
@@ -1686,7 +1980,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	    	if (propertiesTree().getProperty(PropKeys.applicationCodeConfig.format(codiceUtente,configurazione.getConfigurazioneIUV().getIdentificativoDominio(),configurazione.getConfigurazioneIUV().getAuxDigit())) != null)
 				applicationCodeConfig = propertiesTree().getProperty(PropKeys.applicationCodeConfig.format(codiceUtente,configurazione.getConfigurazioneIUV().getIdentificativoDominio(),configurazione.getConfigurazioneIUV().getAuxDigit()));
 			
-    		//se non è stato impostato l'applicationCode su file di configurazione lo recupero dal DB
+    		//se non  stato impostato l'applicationCode su file di configurazione lo recupero dal DB
 	    	if(applicationCodeConfig.equals("")) {
 	    		System.out.println("ApplicationCode non impostato su file di configurazione per codUtente "+codiceUtente+" e idDominio "+configurazione.getConfigurazioneIUV().getIdentificativoDominio());
 				System.out.println("Recupero ApplicationCode dal DB");
@@ -1721,10 +2015,10 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	    		throw new ConfigurazioneException("numeroBollettinoPagoPA su documento non valorizzato");
 	    	if (documento.getIdentificativoUnivocoVersamento()==null || documento.getIdentificativoUnivocoVersamento().trim().length()==0) 
 	    		throw new ConfigurazioneException("identificativoUnivocoVersamento su documento non valorizzato");
-	    	//In caso di iuv in input occorre verificare che non sia già presente in base dati per ente
+	    	//In caso di iuv in input occorre verificare che non sia gi presente in base dati per ente
 	    	int count = archivioCarichiDao.checkExistIUV(codiceEnte, documento.getIdentificativoUnivocoVersamento(), documento.getNumeroDocumento(), 0, flagOperazione);
 	    	if (count > 0) 
-	    		throw new ValidazioneException("identificativoUnivocoVersamento " + documento.getIdentificativoUnivocoVersamento() + " su documento già presente in archivio");
+	    		throw new ValidazioneException("identificativoUnivocoVersamento " + documento.getIdentificativoUnivocoVersamento() + " su documento gi presente in archivio");
 	    	
 	    	if (listScadenze!=null && listScadenze.length>0) {
 				for(Scadenza scadenza : listScadenze) {
@@ -1739,10 +2033,10 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						if (!documento.getIdentificativoUnivocoVersamento().equals(scadenza.getIdentificativoUnivocoVersamento()))
 							throw new ValidazioneException("identificativoUnivocoVersamento su documento monorata differente da identificativoUnivocoVersamento su unica scadenza");
 					}
-					//In caso di iuv in input occorre verificare che non sia già presente in base dati per ente
+					//In caso di iuv in input occorre verificare che non sia gi presente in base dati per ente
 			    	count = archivioCarichiDao.checkExistIUV(codiceEnte, scadenza.getIdentificativoUnivocoVersamento(), documento.getNumeroDocumento(), Integer.valueOf(scadenza.getNumeroRata()), flagOperazione);
 			    	if (count > 0) 
-			    		throw new ValidazioneException("identificativoUnivocoVersamento " + scadenza.getIdentificativoUnivocoVersamento() + " su scadenza con numero rata " + scadenza.getNumeroRata() + " già presente in archivio");
+			    		throw new ValidazioneException("identificativoUnivocoVersamento " + scadenza.getIdentificativoUnivocoVersamento() + " su scadenza con numero rata " + scadenza.getNumeroRata() + " gi presente in archivio");
 				}
 			}
     	}
@@ -1857,7 +2151,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
     	//fine LP PG200360 - 20210224 tassonomia non obbligatoria
     	}
     	//fine LP PG200360
-    	//Verifiche su importo bollettino, non è ammesso caricamento di documenti senza importo residuo
+    	//Verifiche su importo bollettino, non  ammesso caricamento di documenti senza importo residuo
     	if (documento.getImpBollettinoTotaleDocumento().compareTo(BigDecimal.ZERO)<=0) {
     		throw new ValidazioneException("importo totale bollettino su documento " + GenericsDateNumbers.bigDecimalToDouble(documento.getImpBollettinoTotaleDocumento()) + " non consentito");
     	}
@@ -1898,7 +2192,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
     	if(flagOperazione.equalsIgnoreCase("I")) {
     	//fine LP PG200360    		
 	    	//Verifica su identificativoFlusso
-	    	//Non sono ammessi inserimenti o variazioni per identificativiFlusso per cui è stata avviata la stampa avviso
+	    	//Non sono ammessi inserimenti o variazioni per identificativiFlusso per cui  stata avviata la stampa avviso
 	    	String flagElabStampaAvviso = archivioCarichiDao.getFlagElabStampaAvviso(configurazione.getIdentificativoFlusso());
 	    	if (!flagElabStampaAvviso.equals("") && !flagElabStampaAvviso.equals("N")) 
 	    		throw new ConfigurazioneException("identificativoFlusso " + configurazione.getIdentificativoFlusso() + " non valido per fase di stampa avviata");
@@ -2436,7 +2730,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 		  Scadenza[] scadenze,
 		  Tributo[] tributi
 	  ) {
-		debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inizio updateEC");
+		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inizio updateEC");
 		boolean bOk = false;
 		Connection connection = null;
 		ElaborazioneFlussiDao elaborazioneFlussiDao = null;
@@ -2521,7 +2815,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					archivioCarichiDao.updateImportoTributo(dto);
 				}
 			}
-			debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - fine updateEC");
+			logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - fine updateEC");
 		} catch (Exception e) {
 			error("updateEC failed, generic error to: ", e);
 			e.printStackTrace();
@@ -2653,8 +2947,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				lstTerne = listTerneTrib.get(idDominio);
 				if(!lstTerne.contains(idDominioEsteso)) {
 		    		//inizio LP PG22XX05
-					//debug("documento " + documento.getNumeroDocumento() + " sono presenti tributi che hanno valori diversi degli 'iban' a parita' di iddominio (" + idDominio + ")");
-					debug("documento " + documento.getNumeroDocumento() + " sono presenti tributi che hanno valori diversi degli 'iban' e/o 'codice tipologia servizio' a parita' di iddominio (" + idDominio + ")");
+					//logger.debug("documento " + documento.getNumeroDocumento() + " sono presenti tributi che hanno valori diversi degli 'iban' a parita' di iddominio (" + idDominio + ")");
+					logger.debug("documento " + documento.getNumeroDocumento() + " sono presenti tributi che hanno valori diversi degli 'iban' e/o 'codice tipologia servizio' a parita' di iddominio (" + idDominio + ")");
 					//fine LP PG210130
 					bTerneNonCongrue = true;
 				}
@@ -2702,7 +2996,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	private void checkEntiCode(List<String> lista, String codUtente, String idDominio, String documento, int iTrib) throws ValidazioneException
 	{
 		//inizio LP PG210130 Step04
-		//Nota. Si è deciso di non controllare la presenze in anagrafica
+		//Nota. Si  deciso di non controllare la presenze in anagrafica
 		//      degli enti assocciati agli iddominio "secondari".
 		boolean bVerificaPresenzaInAnagrafica = true; //LP PG22XX05 abilitato il controllo
 		
@@ -2718,12 +3012,12 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			} catch (Exception e) {
 				e.printStackTrace();
 				String mess = "documento " + documento + " in checkEntiCode errore: " + e.getMessage();
-				debug(mess);
+				logger.debug(mess);
 				throw new ValidazioneException(mess);
 			}
 			if (keyEnte == null) {
 				String mess = "documento " + documento + " il tributo #" + iTrib  + " ha un valore iddominio " + idDominio + " per il quale non e' presente l'anagrafica dell'ente";
-				debug(mess);
+				logger.debug(mess);
 				throw new ValidazioneException(mess);
 			} else
 				lista.add(idDominio);
@@ -2771,13 +3065,13 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			} catch (Exception e) {
 				e.printStackTrace();
 				String mess = "documento " + documento + " in checkFunEntiCode errore: " + e.getMessage();
-				debug(mess);
+				logger.debug(mess);
 				throw new ValidazioneException(mess);
 			}
 
 			if (!bTrovato ) {
 				String mess = "documento " + documento + " il tributo #" + iTrib  + " ha un valore codice tipologia servizio " + codiceTipologiaServizio + " per il quale non e' presente la configurazione per l'ente";
-				debug(mess);
+				logger.debug(mess);
 				throw new ValidazioneException(mess);
 			} else
 				lista.add(coppia);
@@ -2793,7 +3087,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			if(!prima.equals(dopo)) {
 				in.setImpostaServizio(dopo);
 				String mess = "imposta servizio prima: '" + prima + "' dopo: '" + dopo + "'";
-				debug(mess);
+				logger.debug(mess);
 			}
 		}
 		if(in.getTipoServizio() != null) {
@@ -2801,7 +3095,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			String dopo = VerificaCodiceFiscale.ClearString(prima);
 			if(!prima.equals(dopo)) {
 				String mess = "tipologia servizio prima: '" + prima + "' dopo: '" + dopo + "'";
-				debug(mess);
+				logger.debug(mess);
 				in.setTipoServizio(dopo);
 			}
 		}
@@ -2811,7 +3105,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			if(!prima.equals(dopo)) {
 				in. getRuolo().setCodiceTipologiaServizio(dopo);
 				String mess = "tipologia servizio ruolo prima: '" + prima + "' dopo: '" + dopo + "'";
-				debug(mess);
+				logger.debug(mess);
 			}
 		}
 		int k = 0;
@@ -2823,7 +3117,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				if(!prima.equals(dopo)) {
 					curr.setCodiceTipologiaServizio(dopo);
 					String mess = "tipologia servizio tributo #" + k + " prima: '" + prima + "' dopo: '" + dopo + "'";
-					debug(mess);
+					logger.debug(mess);
 				}
 			}
 		}
@@ -2838,7 +3132,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			if(!prima.equals(dopo)) {
 				in.setImpostaServizio(dopo);
 				String mess = "imposta servizio prima: '" + prima + "' dopo: '" + dopo + "'";
-				debug(mess);
+				logger.debug(mess);
 			}
 		}
 		if(in.getTipoServizio() != null) {
@@ -2846,7 +3140,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			String dopo = VerificaCodiceFiscale.ClearString(prima);
 			if(!prima.equals(dopo)) {
 				String mess = "tipologia servizio prima: '" + prima + "' dopo: '" + dopo + "'";
-				debug(mess);
+				logger.debug(mess);
 				in.setTipoServizio(dopo);
 			}
 		}
@@ -2856,7 +3150,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			if(!prima.equals(dopo)) {
 				in. getRuolo().setCodiceTipologiaServizio(dopo);
 				String mess = "tipologia servizio ruolo prima: '" + prima + "' dopo: '" + dopo + "'";
-				debug(mess);
+				logger.debug(mess);
 			}
 		}
 		int k = 0;
@@ -2868,7 +3162,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				if(!prima.equals(dopo)) {
 					curr.setCodiceTipologiaServizio(dopo);
 					String mess = "tipologia servizio tributo #" + k + " prima: '" + prima + "' dopo: '" + dopo + "'";
-					debug(mess);
+					logger.debug(mess);
 				}
 			}
 		}
@@ -2890,5 +3184,226 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 		return codAutFormattato;
 	}
 
+	// SR 10082023 inizio
+	private boolean isValidResult(String[] sEsito) {
+		if (sEsito != null && sEsito.length > 0 && isValidResult(sEsito[0]))
+			return true;
+		else
+			return false;
+	}
+
+	private boolean isValidResult(String sRetCode) {
+		if (sRetCode != null && (sRetCode.equals("00") || sRetCode.equals("OK")))
+			return true;
+		else
+			return false;
+	}
+
+	private String getCurrentDate() {
+		Calendar calNow = Calendar.getInstance();
+		java.util.Date dateNow = calNow.getTime();
+		SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy"); 
+		String strDate = df.format(dateNow);
+		return strDate; 
+	}
+	
+	private void extendDatiContabileEPagamento(RecuperaDatiBollettinoResponse pgResponse, CachedRowSet ecCached, CachedRowSet ecCachedDettaglioPagamento, CachedRowSet ecCachedDettaglioContabile, String idDominioEntePrincipale, int cosa) throws DaoException{
+		String idDominioLoc = "";
+    	pgResponse.setFlagMultiBeneficiario(false);
+    	try {
+			if(ecCachedDettaglioContabile != null && ecCachedDettaglioContabile.size() > 0) {
+				List<DettaglioContabile> lstCont = new ArrayList<>();  
+				if(ecCachedDettaglioContabile.first()) {
+					do {
+						if(matchKey(ecCached, ecCachedDettaglioContabile, cosa)) {
+							DettaglioContabile dettContabile = new DettaglioContabile();
+							int ind = 8;
+							dettContabile.setCodiceContabilita(trimOrBlank(ecCachedDettaglioContabile.getString(++ind)));
+							dettContabile.setImporto(ecCachedDettaglioContabile.getBigDecimal(++ind));
+							if(dettContabile.getImporto().compareTo(BigDecimal.ZERO) == 1) {
+								dettContabile.setCapitolo(trimOrBlank(ecCachedDettaglioContabile.getString(++ind)));
+								dettContabile.setArticolo(trimOrBlank(ecCachedDettaglioContabile.getString(++ind)));
+								dettContabile.setAnnoCompetenza(trimOrBlank(ecCachedDettaglioContabile.getString(++ind)));
+								idDominioLoc = trimOrBlank(ecCachedDettaglioContabile.getString(++ind));
+								lstCont.add(dettContabile);
+							}	
+						}
+					} while(ecCachedDettaglioContabile.next());
+				}
+				int qCont = lstCont.size(); 
+				if(qCont >= 1) {
+//					com.seda.payer.integraente.webservice.dati.DettaglioContabile[] dettaglioContabile = lstCont.toArray(new com.seda.payer.integraente.webservice.dati.DettaglioContabile[qCont]);
+					pgResponse.setDettaglioContabile(new com.seda.payer.integraente.webservice.dati.DettaglioContabile[qCont]);
+				}
+			}
+			if(ecCachedDettaglioPagamento != null && ecCachedDettaglioPagamento.size() > 0) {
+				int iPag = 0;
+				boolean metaDati = false;
+				List<com.seda.payer.integraente.webservice.dati.DettaglioPagamento> lstPag = new ArrayList<>();  
+				if(ecCachedDettaglioPagamento.first()) {
+					do {
+						if(matchKey(ecCached, ecCachedDettaglioPagamento, cosa)) {
+							com.seda.payer.integraente.webservice.dati.DettaglioPagamento dettPagamento = new com.seda.payer.integraente.webservice.dati.DettaglioPagamento();
+							int ind = 8;
+							dettPagamento.setIdentificativoDominio(trimOrBlank(ecCachedDettaglioPagamento.getString(++ind)));
+							dettPagamento.setImporto(ecCachedDettaglioPagamento.getBigDecimal(++ind));
+							if(dettPagamento.getImporto().compareTo(BigDecimal.ZERO) == 1) {
+								dettPagamento.setIBANBancario(trimOrBlank(ecCachedDettaglioPagamento.getString(++ind)));
+								dettPagamento.setIBANPostale(trimOrBlank(ecCachedDettaglioPagamento.getString(++ind)));
+								try {
+									String appo = ecCachedDettaglioPagamento.getString(++ind);
+									dettPagamento.setCodiceTipologiaServizio(trimOrBlank(appo));
+									if(dettPagamento.getCodiceTipologiaServizio().length() == 0)
+										dettPagamento.setCodiceTipologiaServizio(pgResponse.getTipologiaServizio());
+								} catch (Exception e) {
+									dettPagamento.setCodiceTipologiaServizio(pgResponse.getTipologiaServizio());
+								}
+								dettPagamento.setMetadatiPagoPATariTefaKey(trimOrBlank(ecCachedDettaglioPagamento.getString(++ind)));
+								dettPagamento.setMetadatiPagoPATariTefaValue(trimOrBlank(ecCachedDettaglioPagamento.getString(++ind)));
+								metaDati=!dettPagamento.getMetadatiPagoPATariTefaKey().equals("");
+								lstPag.add(dettPagamento);
+								if(++iPag > 2) {
+									throw new DaoException(998, "Errore in bollettino multi-beneficiario sono presenti piu' di 2 dettaglio pagamento.");
+								}
+							}	
+						}
+					} while(ecCachedDettaglioPagamento.next());
+				}
+				
+				int qPag = lstPag.size(); 
+				if(qPag >= 2 || metaDati) { 
+					boolean bOk = false;
+					for(com.seda.payer.integraente.webservice.dati.DettaglioPagamento dettPagamento : lstPag) {
+						if(dettPagamento.getIdentificativoDominio().equals(idDominioEntePrincipale)) {
+							bOk = true;
+							break;
+						}
+					}
+					if(bOk) {
+						pgResponse.setFlagMultiBeneficiario(true);
+						com.seda.payer.integraente.webservice.dati.DettaglioPagamento[] dettaglioPagamento = null;
+						boolean bOrd = false;
+						for(com.seda.payer.integraente.webservice.dati.DettaglioPagamento dettPagamento : lstPag) {
+							bOrd = dettPagamento.getIdentificativoDominio().equals(idDominioEntePrincipale);
+							break;
+						}
+						if(bOrd) {
+							dettaglioPagamento = lstPag.toArray(new com.seda.payer.integraente.webservice.dati.DettaglioPagamento[qPag]);
+						} else {
+							dettaglioPagamento = new com.seda.payer.integraente.webservice.dati.DettaglioPagamento[qPag];
+							int ik = 1;
+							for(com.seda.payer.integraente.webservice.dati.DettaglioPagamento dettPagamento : lstPag) {
+								dettaglioPagamento[ik] = dettPagamento;
+								ik--;
+							}
+						}
+						pgResponse.setDettaglioImporti(dettaglioPagamento); 
+					} else {
+						pgResponse.setFlagMultiBeneficiario(false);
+					}
+				}
+			}
+    	} catch (DaoException e) {
+			e.printStackTrace();
+			error(e.toString());
+			throw new DaoException(e.getErrorCode(), e.getMessage());
+    	} catch (Exception e) {
+			e.printStackTrace();
+			error(e.toString());
+		}
+    }
+	
+
+	public static String trimOrBlank(String s) {
+		if (s != null)
+			return s.trim();
+		return "";
+	}
+	
+	private boolean matchKey(CachedRowSet ecCached, CachedRowSet ecCachedDettaglio, int cosa) {
+		if(cosa == 0)
+			return matchKeyDoc(ecCached, ecCachedDettaglio);
+		else
+			return matchKeyScadenze(ecCached, ecCachedDettaglio);
+	}
+	
+	private boolean matchKeyDoc(CachedRowSet ecCached, CachedRowSet ecCachedDettaglio) {
+		boolean bdebug = false;
+		if(bdebug)
+			System.out.println("inizio matchKeyDoc");
+		int ind = 0;
+		try {
+			int ind0 = 0;
+			if(bdebug) {
+				System.out.println("# " + ind0  + ":  1 '" + ecCached.getString(1).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ":  2 '" + ecCached.getString(2).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ":  3 '" + ecCached.getString(3).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ":  4 '" + ecCached.getString(4).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ":  6 '" + ecCached.getString(6).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ":  9 '" + ecCached.getString(9).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ": IMPOSTASERVIZIO '" + ecCached.getString("IMPOSTASERVIZIO").trim() + "' - '" + ecCachedDettaglio.getString("IMPOSTASERVIZIO").trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ": 10 '" + ecCached.getString(10).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ": 21 '" + ecCached.getString(21).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+			}
+			if(ecCached.getString(1).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			   && ecCached.getString(2).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			   && ecCached.getString(3).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			   && ecCached.getString(4).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			   && ecCached.getString(6).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			   && ecCached.getString(9).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			   && ecCached.getString(10).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			   && ecCached.getString(21).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			) {
+				if(bdebug)
+					System.out.println("fine matchKeyDoc: true");
+				return true;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		if(bdebug)
+			System.out.println("fine matchKeyDoc: false # " + ind);
+		return false;
+	}
+	
+	private boolean matchKeyScadenze(CachedRowSet ecCached, CachedRowSet ecCachedDettaglio) {
+		boolean bdebug = false;
+		if(bdebug)
+			System.out.println("inizio matchKeyScadenze");
+		int ind = 0;
+		try {
+			int ind0 = 0;
+			if(bdebug) {
+				System.out.println("# " + ind0  + ":  1 '" + ecCached.getString(1).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ":  2 '" + ecCached.getString(2).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ":  3 '" + ecCached.getString(3).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ":  4 '" + ecCached.getString(4).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ":  6 '" + ecCached.getString(6).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ": 20 '" + ecCached.getString(20).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ": IMPOSTASERVIZIO '" + ecCached.getString("IMPOSTASERVIZIO").trim() + "' - '" + ecCachedDettaglio.getString("IMPOSTASERVIZIO").trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ":  8 '" + ecCached.getString(8).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+				System.out.println("# " + ind0  + ": 11 '" + ecCached.getString(11).trim() + "' - '" + ecCachedDettaglio.getString(++ind0).trim() + "' # " + ind0);
+			}
+			if(ecCached.getString(1).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			   && ecCached.getString(2).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			   && ecCached.getString(3).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			   && ecCached.getString(4).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			   && ecCached.getString(6).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			   && ecCached.getString(20).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			   && ecCached.getString(8).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			   && ecCached.getString(11).trim().equals(ecCachedDettaglio.getString(++ind).trim())
+			) {
+				if(bdebug)
+					System.out.println("fine matchKeyScadenze: true");
+				return true;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		if(bdebug)
+			System.out.println("fine matchKeyScadenze: false # " + ind);
+		return false;
+	}	
+	// SR 10082023 fine
 
 }
