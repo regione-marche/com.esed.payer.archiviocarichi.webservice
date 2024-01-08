@@ -146,16 +146,14 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	private List<String> lstFunEnti = new ArrayList<String>();
 	//fine LP PG22XX05
 
-	//inizio SR 20230308	
+	// inizio SR PGNTACWS-2
 	private CachedRowSet ecCachedDettaglioPagamento = null;
 	private CachedRowSet ecCachedDettaglioContabile = null;
 	private RecuperaDatiBollettinoResponse pgResponse = null;
 	private String listXmlDP = null;
 	private String listXmlDC = null;
 	private int progressivoFlussoPerInviaDovuti = 0;
-	private boolean isVariazioneEC = false;
-	private DovutoDto dovutoDaModificare = null;
-	//fine SR 20230308
+	// fine SR PGNTACWS-2
 	
 	@Override
 	public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.InserimentoEcResponse inserimentoEC(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.InserimentoEcRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
@@ -725,7 +723,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
         	if(propertiesTree().getProperty(PropKeys.servizioJppa.format()) != null && propertiesTree().getProperty(PropKeys.servizioJppa.format()).equals("Y")) {
         		InviaDovutiDao dao = new InviaDovutiDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
     			String codiceIpaComune = "";
-    			codiceIpaComune = dao.getCodiceIpa(in.getListTributi(0).getIdentificativoDominio(), in.getCodiceEnte());
+    			String idDominioComune = in.getConfigurazione().getConfigurazioneIUV().getIdentificativoDominio();
+    			codiceIpaComune = dao.getCodiceIpa(idDominioComune, in.getCodiceEnte());
     			
     			CaricaDebitiJppa jppa = new CaricaDebitiJppa();
     			String token = jppa.login(propertiesTree().getProperty(PropKeys.username.format()), propertiesTree().getProperty(PropKeys.password.format()), codiceIpaComune);
@@ -815,17 +814,36 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
     						
     						String codiceIpaProvincia = "";
     						if(Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario())) {
-    							codiceIpaProvincia = dao.getCodiceIpa(in.getListTributi(1).getIdentificativoDominio(), in.getCodiceEnte());
+    							String idDominioProvincia = Arrays.asList(in.getListTributi())
+    									.stream()
+    									.filter(t -> !t.getIdentificativoDominio().equals(idDominioComune))
+    									.findFirst()
+    									.get()
+    									.getIdentificativoDominio();
+    							Ente ente = enteDato.doDetailToCodFis("", idDominioProvincia,"");
+    							codiceIpaProvincia = ente.getCodIpaEnte();
     						}
     						
     						List<DovutoDto> dovutiList = new ArrayList<>();
     						
+							ContribuenteDto contribuente = new ContribuenteDto(
+									"", // cap
+									"", // civico
+									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().toUpperCase(), 
+									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() >= 16 ? anagrafica.getDenominazione() : null, // cognome=nome+cognome
+									anagrafica.getEmail() != null ? anagrafica.getEmail() : null, // email
+									anagrafica.getIndirizzoFiscale() != null ? anagrafica.getIndirizzoFiscale() : null, // indirizzo
+									"", // localita
+									"", // nazione
+									"", // nome
+									"", // provincia
+									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? anagrafica.getDenominazione() : null, // ragioneSociale
+									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? TipoIdentificativoUnivocoEnum.GIURID : TipoIdentificativoUnivocoEnum.FIS 
+									);
+													
     						// Se il bollettino è multirata, invio le rate come dovuti separati
     						if (in.getListScadenze().length > 1) {
-
-    							List<DettaglioDovutoDto> dettaglioList = new ArrayList<>();
     							int progressivo = 1;
-
     							for(Scadenza scadenza : in.getListScadenze()) {																						     								
     								DatoAccertamentoDto datoAccertamento = new DatoAccertamentoDto(
 											pgResponse.getAnagraficaBollettino().getAnnoDocumento(), 
@@ -835,7 +853,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 									
 									DettaglioDovutoDto dettaglio = new DettaglioDovutoDto(
 											pgResponse.getCausale() + ", rata " + scadenza.getNumeroRata(),
-											pgResponse.getFlagMultiBeneficiario() ? (progressivo == 1 ? "c_g479" : "p_PU") : codiceIpaComune, 
+											Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario()) ? (progressivo == 1 ? codiceIpaComune : codiceIpaProvincia) : codiceIpaComune, 
 											"codiceLotto",
 											CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio()),
 											OffsetDateTime.parse(new Date(scadenza.getDataScadenzaRata()).toInstant().atOffset(ZoneOffset.UTC).toString(),DateTimeFormatter.ISO_OFFSET_DATE_TIME),
@@ -843,7 +861,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 											null,
 											Arrays.asList(datoAccertamento),
 											"multirata",
-											scadenza.getIdentificativoUnivocoVersamento()+scadenza.getNumeroRata(),
+											idDominioComune+"_"+scadenza.getIdentificativoUnivocoVersamento(),
 											scadenza.getImpBollettinoRata().doubleValue() / 100D,
 											null, // BigDecimal importo spese di notifica
 											null, // MarcaDaBolloDto									
@@ -851,43 +869,25 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 											null, // List<ParametroDebitoDto>
 											SpeseNotificaDaAttualizzareEnum.OFF  // SpeseNotificaDaAttualizzareEnum
 											);								
+	    							
+	    							NumeroAvvisoDto numeroAvvisoDto = new NumeroAvvisoDto(true, scadenza.getNumeroBollettinoPagoPA(), 1);
 
-    								dettaglioList.add(dettaglio);
+	    							TestataDovutoDto testata = new TestataDovutoDto(
+	    									contribuente, 
+	    									documento.getCausale(), 
+	    									idDominioComune+"_"+scadenza.getIdentificativoUnivocoVersamento());
+	    							
+	    							DovutoDto dovuto = new DovutoDto(
+	    									Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario()) ? ContestoDovutoEnum.MULTIBENEFICIARIO : ContestoDovutoEnum.MONOBENEFICIARIO,
+	    									Arrays.asList(dettaglio),
+	    									numeroAvvisoDto, 
+	    									testata);   						
+	    							dovutiList.add(dovuto);
     								progressivo++;							
     							}
-    							
-    							ContribuenteDto contribuente = new ContribuenteDto(
-    									"", // cap
-    									"", // civico
-    									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().toUpperCase(), 
-    									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() >= 16 ? anagrafica.getDenominazione() : null, // cognome=nome+cognome
-    									anagrafica.getEmail() != null ? anagrafica.getEmail() : null, // email
-    									anagrafica.getIndirizzoFiscale() != null ? anagrafica.getIndirizzoFiscale() : null, // indirizzo
-    									"", // localita
-    									"", // nazione
-    									"", // nome
-    									"", // provincia
-    									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? anagrafica.getDenominazione() : null, // ragioneSociale
-    									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? TipoIdentificativoUnivocoEnum.GIURID : TipoIdentificativoUnivocoEnum.FIS 
-    									);
-    							
-    							TestataDovutoDto testata = new TestataDovutoDto(
-    									contribuente, 
-    									documento.getCausale(), 
-    									documento.getIdentificativoUnivocoVersamento()+documento.getNumeroDocumento()); 
-    							
-    							NumeroAvvisoDto numeroAvvisoDto = new NumeroAvvisoDto(true, pgResponse.getAnagraficaBollettino().getNumeroDocumento(), 1);
-
-    							DovutoDto dovuto = new DovutoDto(
-    									Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario()) ? ContestoDovutoEnum.MULTIBENEFICIARIO : ContestoDovutoEnum.MONOBENEFICIARIO,
-    									dettaglioList,
-    									numeroAvvisoDto, 
-    									testata);   						
-    							dovutiList.add(dovuto);
     						} 
-    						// Se il bollettino è multirata o se è soluzione unica, invio un dovuto con l'importo totale.
-//    						DovutoDto dovuto = new DovutoDto(pgResponse, codiceIpaComune, codiceIpaProvincia, Arrays.asList(in.getListTributi()), in.getAnagrafica()); 
-    						
+    						    					
+    						// Se il bollettino è multirata o se è soluzione unica, invio un dovuto con l'importo totale.    						
     						List<DettaglioDovutoDto> dettaglioList = new ArrayList<>();
 							int progressivo = 1;
     						for(Tributo tributo : Arrays.asList(in.getListTributi())){
@@ -908,7 +908,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 										null,
 										Arrays.asList(datoAccertamento),
 										"unica",
-										pgResponse.getIdentificativoUnivocoVersamento()+pgResponse.getIdentificativoBollettino(),
+										idDominioComune+"_"+pgResponse.getIdentificativoUnivocoVersamento(),
 										tributo.getImpTributo().doubleValue() / 100D,
 										null, // BigDecimal importo spese di notifica
 										null, // MarcaDaBolloDto									
@@ -920,29 +920,13 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								progressivo++;
 								dettaglioList.add(dettaglio);
     						}
-    						
-							ContribuenteDto contribuente = new ContribuenteDto(
-									"", // cap
-									"", // civico
-									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().toUpperCase(), 
-									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() >= 16 ? anagrafica.getDenominazione() : null, // cognome=nome+cognome
-									anagrafica.getEmail() != null ? anagrafica.getEmail() : null, // email
-									anagrafica.getIndirizzoFiscale() != null ? anagrafica.getIndirizzoFiscale() : null, // indirizzo
-									"", // localita
-									"", // nazione
-									"", // nome
-									"", // provincia
-									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? anagrafica.getDenominazione() : null, // ragioneSociale
-									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? TipoIdentificativoUnivocoEnum.GIURID : TipoIdentificativoUnivocoEnum.FIS 
-									);
-							
+    								
+							NumeroAvvisoDto numeroAvvisoDto = new NumeroAvvisoDto(true, pgResponse.getIdentificativoBollettino(), 1);
 							TestataDovutoDto testata = new TestataDovutoDto(
 									contribuente, 
 									documento.getCausale(), 
-									documento.getIdentificativoUnivocoVersamento()+documento.getNumeroDocumento()); 
+									idDominioComune+"_"+pgResponse.getIdentificativoUnivocoVersamento());
 							
-							NumeroAvvisoDto numeroAvvisoDto = new NumeroAvvisoDto(true, pgResponse.getIdentificativoBollettino(), 1);
-
 							DovutoDto dovuto = new DovutoDto(
 									Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario()) ? ContestoDovutoEnum.MULTIBENEFICIARIO : ContestoDovutoEnum.MONOBENEFICIARIO,
 									dettaglioList, 
@@ -950,10 +934,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 									testata);   						
 							
     						dovutiList.add(dovuto);
-    						
-    						this.dovutoDaModificare = dovuto;
-    						
-    						RispostaInviaDovutiDto res = jppa.inviaDovuti(token, codiceIpaComune, dovutiList); // codiceIpaComune
+    					    						
+    						RispostaInviaDovutiDto res = jppa.inviaDovuti(token, codiceIpaComune, dovutiList); 
     						if(res != null) {
     							dao.aggiornaFlagInviaDovuto(progressivoFlussoPerInviaDovuti, getSchemaDifferito(dbSchemaCodSocieta)); 							
     						}
@@ -1013,7 +995,6 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	@SuppressWarnings("unused")
 	//fine LP PG200360
 	public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.VariazioneEcResponse variazioneEC(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.VariazioneEcRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
-		this.isVariazioneEC  = true;
     	ClearVariazioneEC(in); //LP PG22XX05
     	logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - inizio");
     	VariazioneEcResponse response = new VariazioneEcResponse(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), "", "", in.getDocumento());
@@ -1237,8 +1218,6 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			    	}
 		    	}
         	}
-        	
-    		this.isVariazioneEC  = false;
     	} catch (ConfigurazioneException e) {	
 			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC failed, configuration error due to: ", e);
 			response.setCodiceEsito("02");
@@ -1320,6 +1299,9 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 //				throw new NotFoundException("Posizione debitoria non presente in archivio");	
 //			} else {
 			//Verifico se sussistono pagamenti correlati alla posizione debitoria
+    		
+			String numeroAvvisoDaCancellare = archivioCarichiDao.getDocumento(docIn).getNumeroBollettinoPagoPA();
+	
 			estrattoContoDao = new EstrattoContoDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
 			logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - cancellazioneEC - doCachedRowAcquisizioneTransazioni - verifica presenza pagamenti su posizione debitoria");
 			//20220808 SB - inizio
@@ -1350,22 +1332,17 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						response.setCodiceEsito("00");
 			    		response.setMessaggioEsito("Richiesta eseguita con successo");
 			    		
+			    		// inizio SR PGNTACWS-2
 			        	if(propertiesTree().getProperty(PropKeys.servizioJppa.format()) != null && propertiesTree().getProperty(PropKeys.servizioJppa.format()).equals("Y")) {
 				    		CaricaDebitiJppa jppa = new CaricaDebitiJppa();
-							String token = jppa.login(propertiesTree().getProperty(PropKeys.username.format()), propertiesTree().getProperty(PropKeys.password.format()), propertiesTree().getProperty(PropKeys.idEnte.format()));
 							InviaDovutiDao dao = new InviaDovutiDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
 							String codiceIpaComune = "";
 							codiceIpaComune = dao.getCodiceIpa(in.getCodiceUtente(), in.getCodiceEnte());
 							
-				    		if (this.isVariazioneEC) {
-				    			// MODIFICA DOVUTO
-//				    			jppa.modificaDovuto(token, codiceIpaComune, dovutoDaModificare);
-				    		//} else {
-				    			// CANCELLA DOVUTO
-								jppa.cancellaDovuto(token, codiceIpaComune, in.getNumeroDocumento()); 		// qua ci vuole il numero avviso 						
-				    		}
+							String token = jppa.login(propertiesTree().getProperty(PropKeys.username.format()), propertiesTree().getProperty(PropKeys.password.format()), codiceIpaComune);
+							jppa.cancellaDovuto(token, codiceIpaComune, numeroAvvisoDaCancellare);  						
 			        	}
-		    			this.isVariazioneEC  = false;
+			        	// fine SR PGNTACWS-2
 		        	} else {
 		        		throw new NotFoundException("Posizione debitoria non presente in archivio");
 		        	}
