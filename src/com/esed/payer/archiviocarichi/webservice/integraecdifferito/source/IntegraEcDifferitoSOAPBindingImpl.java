@@ -155,8 +155,22 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	private int progressivoFlussoPerInviaDovuti = 0;
 	// fine SR PGNTACWS-2
 	
+	private BigDecimal[] listaImportiScadenze = null; // SR PGNTACWS-5 
+	private BigDecimal maxImport = null; // SR PGNTACWS-5
+	
 	@Override
 	public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.InserimentoEcResponse inserimentoEC(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.InserimentoEcRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
+		
+		// inizio SR PGNTACWS-5
+		if(in.getListScadenze() != null && in.getListScadenze().length != 0) {
+			this.listaImportiScadenze = new BigDecimal[in.getListScadenze().length];
+			for (int i = 0; i<in.getListScadenze().length; i++) {
+				listaImportiScadenze[i] = in.getListScadenze()[i].getImpBollettinoRata();
+			}			
+			this.maxImport = Arrays.asList(listaImportiScadenze).stream().max(BigDecimal::compareTo).get();
+		}
+		// fine SR PGNTACWS-5
+		
 		CachedRowSet ecCached = null;
 		
 		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - inizio");
@@ -387,6 +401,9 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					}
 			
 					//EH2 Scadenze
+					BigDecimal maxImportNew = Arrays.asList(in.getListScadenze()).stream().map(s-> s.getImpBollettinoRata()).max(BigDecimal::compareTo).get();
+					BigDecimal scarto = maxImportNew.subtract(this.maxImport);
+					
 					if (in.getListScadenze()!=null && in.getListScadenze().length>0) {
 						for(Scadenza scadenza : in.getListScadenze()) {
 							numeroRecord++;
@@ -415,11 +432,22 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								identificativoUnivocoVersamentoScadenza = scadenza.getIdentificativoUnivocoVersamento();
 							}
 							
+							
+							// inizio SR PGNTACWS-5 							
+							if(scadenza.getImpBollettinoRata().compareTo(this.listaImportiScadenze[scadenza.getNumeroRata()-1]) > 0) {	
+								scadenza.setImpBollettinoRata(scadenza.getImpBollettinoRata().subtract(scarto));
+							} else if(scadenza.getImpBollettinoRata().compareTo(this.listaImportiScadenze[scadenza.getNumeroRata()-1]) < 0) {
+								BigDecimal diff = this.listaImportiScadenze[scadenza.getNumeroRata()-1].subtract(scadenza.getImpBollettinoRata());
+								scadenza.setImpBollettinoRata(scadenza.getImpBollettinoRata().add(diff));
+								scarto = scarto.subtract(diff);								
+							}
+							// fine SR PGNTACWS-5
+							
 							logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH2");
 							elaborazioneFlussiDao.doInsertEH2(progressivoFlusso, "EH2", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), 
 									in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), 
 									in.getImpostaServizio(), documento.getNumeroDocumento(), 
-									GenericsDateNumbers.bigDecimalToDouble(scadenza.getImpBollettinoRata()), //importo dovuto tributi	//TODO da verificare
+									GenericsDateNumbers.bigDecimalToDouble(scadenza.getImpBollettinoRata()), //importo dovuto tributi
 									0,
 									java.sql.Date.valueOf(GenericsDateNumbers.formatData(scadenza.getDataScadenzaRata(),"dd/MM/yyyy","yyyy-MM-dd")),
 									scadenza.getNumeroRata(), 
@@ -844,7 +872,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
     						// Se il bollettino è multirata, invio le rate come dovuti separati
     						if (in.getListScadenze().length > 1) {
     							int progressivo = 1;
-    							for(Scadenza scadenza : in.getListScadenze()) {																						     								
+    							for(Scadenza scadenza : in.getListScadenze()) {		
+    								String iuvScadenza = scadenza.getIdentificativoUnivocoVersamento() != null && !scadenza.getIdentificativoUnivocoVersamento().isEmpty() ? scadenza.getIdentificativoUnivocoVersamento() : scadenza.getNumeroBollettinoPagoPA().substring(1);
     								DatoAccertamentoDto datoAccertamento = new DatoAccertamentoDto(
 											pgResponse.getAnagraficaBollettino().getAnnoDocumento(), 
 											CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio()).getValue(), 
@@ -861,7 +890,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 											null,
 											Arrays.asList(datoAccertamento),
 											"multirata",
-											idDominioComune+"_"+scadenza.getIdentificativoUnivocoVersamento(),
+											idDominioComune+"_"+iuvScadenza,
 											scadenza.getImpBollettinoRata().doubleValue() / 100D,
 											null, // BigDecimal importo spese di notifica
 											null, // MarcaDaBolloDto									
@@ -875,7 +904,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	    							TestataDovutoDto testata = new TestataDovutoDto(
 	    									contribuente, 
 	    									documento.getCausale(), 
-	    									idDominioComune+"_"+scadenza.getIdentificativoUnivocoVersamento());
+	    									idDominioComune+"_"+iuvScadenza);
 	    							
 	    							DovutoDto dovuto = new DovutoDto(
 	    									Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario()) ? ContestoDovutoEnum.MULTIBENEFICIARIO : ContestoDovutoEnum.MONOBENEFICIARIO,
