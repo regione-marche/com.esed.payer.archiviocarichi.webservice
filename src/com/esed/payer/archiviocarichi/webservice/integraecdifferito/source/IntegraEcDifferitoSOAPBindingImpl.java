@@ -480,13 +480,14 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								}
 							}
 							if(trovato) {
+								Double importo = numeroRata == 0 ? GenericsDateNumbers.bigDecimalToDouble(dettPag.getImporto()) : GenericsDateNumbers.bigDecimalToDouble(listaImportiScadenze[numeroRata-1]);
 								logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEHD");
 								elaborazioneFlussiDao.doInsertEHD(progressivoFlusso, "EHD", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), 
 										in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), 
 										in.getImpostaServizio(), documento.getNumeroDocumento(),
 										dettPag.getNumeroBollettinoPagoPA(),
 										dettPag.getIdentificativoDominio(),
-										GenericsDateNumbers.bigDecimalToDouble(dettPag.getImporto()),
+										importo,
 										dettPag.getIBANBancario(), 
 										(dettPag.getIBANPostale() != null && dettPag.getIBANPostale().trim().length() > 0 ? dettPag.getIBANPostale().trim() : ""),
 										dettPag.getCodiceTipologiaServizio(), //LP PG22XX05
@@ -496,7 +497,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 										dettPag.getMetadatiPagoPATariTefaValue()
 										//fine SB PAGONET-537
 										);
-							} else {
+							}  else {
 								throw new ValidazioneException("Per DettaglioPagamento non si riesce a valorizzare il numero Bollettino!");
 							}
 						}
