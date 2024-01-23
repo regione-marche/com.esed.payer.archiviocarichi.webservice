@@ -480,7 +480,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								}
 							}
 							if(trovato) {
-								Double importo = numeroRata == 0 ? GenericsDateNumbers.bigDecimalToDouble(dettPag.getImporto()) : GenericsDateNumbers.bigDecimalToDouble(listaImportiScadenze[numeroRata-1]);
+								Double importo = numeroRata == 0 ? GenericsDateNumbers.bigDecimalToDouble(dettPag.getImporto()) : GenericsDateNumbers.bigDecimalToDouble(listaImportiScadenze[numeroRata-1]); // PGNTACWS-5
 								logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEHD");
 								elaborazioneFlussiDao.doInsertEHD(progressivoFlusso, "EHD", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), 
 										in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), 
