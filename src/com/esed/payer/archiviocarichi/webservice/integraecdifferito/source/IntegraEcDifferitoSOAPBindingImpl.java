@@ -740,8 +740,10 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					if (checkDuplicate) 
 						throw new DuplicateException(ex.getMessage());
 					else {
-						if (!flagSuccessfullExecution)
+						if (!flagSuccessfullExecution) {
 							archivioCarichiDao.doRollbackArchivioCarichi(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), documento.getNumeroDocumento());
+							archivioCarichiDao.doRollbackArchivioCarichiELG(fileNameToElab, progressivoFlusso);
+						}
 						throw ex;
 					}
 				}
