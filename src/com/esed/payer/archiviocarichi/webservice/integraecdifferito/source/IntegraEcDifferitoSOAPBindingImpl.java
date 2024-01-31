@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.WebRowSet;
@@ -161,7 +162,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	@Override
 	public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.InserimentoEcResponse inserimentoEC(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.InserimentoEcRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
 		
-		// inizio SR PGNTACWS-5
+		// inizio SR PGNTACWS-5 arrotondamento importi
 		if(in.getListScadenze() != null && in.getListScadenze().length != 0) {
 			this.listaImportiScadenze = new BigDecimal[in.getListScadenze().length];
 			for (int i = 0; i<in.getListScadenze().length; i++) {
@@ -169,7 +170,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			}			
 			this.maxImport = Arrays.asList(listaImportiScadenze).stream().max(BigDecimal::compareTo).get();
 		}
-		// fine SR PGNTACWS-5
+		// fine SR PGNTACWS-5 
 		
 		CachedRowSet ecCached = null;
 		
@@ -433,7 +434,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							}
 							
 							
-							// inizio SR PGNTACWS-5 							
+							// inizio SR PGNTACWS-5 arrotondamento importi							
 							if(scadenza.getImpBollettinoRata().compareTo(this.listaImportiScadenze[scadenza.getNumeroRata()-1]) > 0) {	
 								scadenza.setImpBollettinoRata(scadenza.getImpBollettinoRata().subtract(scarto));
 							} else if(scadenza.getImpBollettinoRata().compareTo(this.listaImportiScadenze[scadenza.getNumeroRata()-1]) < 0) {
@@ -479,27 +480,60 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 									}
 								}
 							}
-							if(trovato) {
-								Double importo = numeroRata == 0 ? GenericsDateNumbers.bigDecimalToDouble(dettPag.getImporto()) : GenericsDateNumbers.bigDecimalToDouble(listaImportiScadenze[numeroRata-1]); // PGNTACWS-5
-								logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEHD");
-								elaborazioneFlussiDao.doInsertEHD(progressivoFlusso, "EHD", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), 
-										in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), 
-										in.getImpostaServizio(), documento.getNumeroDocumento(),
-										dettPag.getNumeroBollettinoPagoPA(),
-										dettPag.getIdentificativoDominio(),
-										importo,
-										dettPag.getIBANBancario(), 
-										(dettPag.getIBANPostale() != null && dettPag.getIBANPostale().trim().length() > 0 ? dettPag.getIBANPostale().trim() : ""),
-										dettPag.getCodiceTipologiaServizio(), //LP PG22XX05
-										'C',
-										//inizio SB PAGONET-537
-										dettPag.getMetadatiPagoPATariTefaKey(),
-										dettPag.getMetadatiPagoPATariTefaValue()
-										//fine SB PAGONET-537
-										);
-							}  else {
+							if(!trovato) {		
 								throw new ValidazioneException("Per DettaglioPagamento non si riesce a valorizzare il numero Bollettino!");
 							}
+						}
+						
+						// inizio SR PGNTACWS-5 arrotondamento importi
+						Map<String, List<DettaglioPagamento>> groupedByNumeroAvviso = Arrays.asList(listPagamento).stream()
+								.collect(Collectors.groupingBy(DettaglioPagamento::getNumeroBollettinoPagoPA));
+						BigDecimal[] totRateDettagli = new BigDecimal[in.getListScadenze().length];
+						
+						for(Scadenza scadenza : Arrays.asList(in.getListScadenze())) {
+							BigDecimal importo = groupedByNumeroAvviso.get(scadenza.getNumeroBollettinoPagoPA())
+									.stream()
+									.map(DettaglioPagamento::getImporto)
+									.reduce(BigDecimal.ZERO, BigDecimal::add);
+							totRateDettagli[scadenza.getNumeroRata()-1] = importo;
+						}
+						
+						BigDecimal maxImportDett = Arrays.asList(totRateDettagli).stream().max(BigDecimal::compareTo).get();
+						BigDecimal scartoDett = maxImportDett.subtract(this.maxImport);
+						// fine SR PGNTACWS-5  
+						
+						for(DettaglioPagamento dettPag : listPagamento) {
+							// inizio SR PGNTACWS-5 arrotondamento importi
+							if(dettPag.getNumeroRata() > 0) {
+								BigDecimal tot = totRateDettagli[dettPag.getNumeroRata()-1];							
+								if(tot.compareTo(in.getListScadenze()[dettPag.getNumeroRata()-1].getImpBollettinoRata()) > 0) {
+									dettPag.setImporto(dettPag.getImporto().subtract(scartoDett));
+									totRateDettagli[dettPag.getNumeroRata()-1] = totRateDettagli[dettPag.getNumeroRata()-1].subtract(scartoDett);
+								} else if(tot.compareTo(in.getListScadenze()[dettPag.getNumeroRata()-1].getImpBollettinoRata()) < 0) {
+									BigDecimal diff = in.getListScadenze()[dettPag.getNumeroRata()-1].getImpBollettinoRata().subtract(tot);
+									dettPag.setImporto(dettPag.getImporto().add(diff));
+									totRateDettagli[dettPag.getNumeroRata()-1] = totRateDettagli[dettPag.getNumeroRata()-1].add(diff);
+									scartoDett = scartoDett.subtract(diff);
+								}
+							}
+							// fine SR PGNTACWS-5 arrotondamento importi
+							
+							logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEHD");											
+							elaborazioneFlussiDao.doInsertEHD(progressivoFlusso, "EHD", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), 
+									in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), 
+									in.getImpostaServizio(), documento.getNumeroDocumento(),
+									dettPag.getNumeroBollettinoPagoPA(),
+									dettPag.getIdentificativoDominio(),
+									GenericsDateNumbers.bigDecimalToDouble(dettPag.getImporto()),
+									dettPag.getIBANBancario(), 
+									(dettPag.getIBANPostale() != null && dettPag.getIBANPostale().trim().length() > 0 ? dettPag.getIBANPostale().trim() : ""),
+									dettPag.getCodiceTipologiaServizio(), //LP PG22XX05
+									'C',
+									//inizio SB PAGONET-537
+									dettPag.getMetadatiPagoPATariTefaKey(),
+									dettPag.getMetadatiPagoPATariTefaValue()
+									//fine SB PAGONET-537
+									);
 						}
 					}
 					
