@@ -683,7 +683,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH8");
 						//inizio LP PG200360
 						numeroRecord++;
-						//fine LP PG200360
+						//fine LP PG200360				
 						elaborazioneFlussiDao.doInsertEH8(progressivoFlusso, "EH8", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), in.getTipoServizio(), 
 								in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), 
 								anagrafica.getCodiceFiscale().toUpperCase(), anagrafica.getDenominazione(), anagrafica.getTipoAnagrafica(),
@@ -1025,7 +1025,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
         } catch (Exception e) {
 			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC failed, generic error due to: ", e);
 			response.setCodiceEsito("01");
-			response.setMessaggioEsito("Errore generico");
+			response.setMessaggioEsito("Errore generico");			
 		} finally {
 			//inizio LP PG21XX04 Leak
     		//closeConnection(connection);
