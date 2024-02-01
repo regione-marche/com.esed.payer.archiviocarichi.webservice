@@ -684,6 +684,24 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						//inizio LP PG200360
 						numeroRecord++;
 						//fine LP PG200360
+						
+						logger.debug("progressivoFlusso " + progressivoFlusso);
+						logger.debug("codice utente " + in.getCodiceUtente());
+						logger.debug("data flusso" + java.sql.Date.valueOf(dataFlusso));
+						logger.debug("tipo servizio " + in.getTipoServizio());
+						logger.debug("cod ente " +in.getCodiceEnte());
+						logger.debug("imposta servizio " + in.getImpostaServizio());
+						logger.debug("cf " + anagrafica.getCodiceFiscale().toUpperCase());
+						logger.debug("denom " + anagrafica.getDenominazione());
+						logger.debug("tipo anag " + anagrafica.getTipoAnagrafica());
+						logger.debug("comune " + codiceBelfioreComuneNascita);
+						logger.debug("nascita " + java.sql.Date.valueOf(dataNascita));
+						logger.debug("indirizzo " +  anagrafica.getIndirizzoFiscale());
+						logger.debug("belfiore " + anagrafica.getCodiceBelfioreComuneFiscale());
+						logger.debug("email " + email);
+						logger.debug("emailPec " + emailPec);
+						
+						
 						elaborazioneFlussiDao.doInsertEH8(progressivoFlusso, "EH8", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), in.getTipoServizio(), 
 								in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), 
 								anagrafica.getCodiceFiscale().toUpperCase(), anagrafica.getDenominazione(), anagrafica.getTipoAnagrafica(),
@@ -1026,6 +1044,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC failed, generic error due to: ", e);
 			response.setCodiceEsito("01");
 			response.setMessaggioEsito("Errore generico");
+			e.printStackTrace();	
+			
 		} finally {
 			//inizio LP PG21XX04 Leak
     		//closeConnection(connection);
