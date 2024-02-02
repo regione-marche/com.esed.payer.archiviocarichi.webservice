@@ -76,6 +76,7 @@ import com.esed.payer.archiviocarichi.webservice.model.InviaDovutiDao;
 import com.esed.payer.archiviocarichi.webservice.util.GenericsDateNumbers;
 import com.esed.payer.archiviocarichi.webservice.util.IuvUtils;
 import com.esed.payer.archiviocarichi.webservice.util.VerificaCodiceFiscale;
+import com.esed.payer.archiviocarichi.webservice.util.VerificaEmail;
 //inizio LP - mail Giorgia 20200608
 //import com.esed.payer.archiviocarichi.webservice.util.geos.Bollettino;
 //import com.esed.payer.archiviocarichi.webservice.util.geos.DatiAnagrafici;
@@ -154,10 +155,11 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	private String listXmlDC = null;
 	private int progressivoFlussoPerInviaDovuti = 0;
 	// fine SR PGNTACWS-2
-	
-	private BigDecimal[] listaImportiScadenze = null; // SR PGNTACWS-5 
-	private BigDecimal maxImport = null; // SR PGNTACWS-5
-	
+	// inizio SR PGNTACWS-5 
+	private BigDecimal[] listaImportiScadenze = null; 
+	private BigDecimal maxImport = null; 
+	// fine SR PGNTACWS-5
+
 	@Override
 	public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.InserimentoEcResponse inserimentoEC(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.InserimentoEcRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
 		
@@ -642,8 +644,21 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					if (dataNascita.equals(""))
 						dataNascita = "1900-01-01";
 					String codiceBelfioreComuneNascita = anagrafica.getCodiceBelfioreComuneNascita()==null?"":anagrafica.getCodiceBelfioreComuneNascita();
-					String email = anagrafica.getEmail()==null?"":anagrafica.getEmail();
-					String emailPec = anagrafica.getEmailPec()==null?"":anagrafica.getEmailPec();
+					
+					// inizio SR PGNTACWS-9
+					if (anagrafica.getEmailPec() == null) {
+						throw new ValidazioneException("emailPec non valorizzata");
+					} else if (!anagrafica.getEmailPec().trim().equals("") && !VerificaEmail.validateEmail(anagrafica.getEmailPec())) {
+						throw new ValidazioneException("formato emailPec non valido");
+					}
+					
+					if (anagrafica.getEmail() == null) {
+						throw new ValidazioneException("email non valorizzata");
+					} else if (!anagrafica.getEmail().trim().equals("") && !VerificaEmail.validateEmail(anagrafica.getEmail())) {
+						throw new ValidazioneException("formato email non valido");
+					}					
+					// fine SR PGNTACWS-9
+					
 					if (anaOut.getProgressivoFlusso() == null) {
 						logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH8");
 						//inizio LP PG200360
@@ -653,7 +668,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), 
 								anagrafica.getCodiceFiscale().toUpperCase(), anagrafica.getDenominazione(), anagrafica.getTipoAnagrafica(),
 								codiceBelfioreComuneNascita, 
-								java.sql.Date.valueOf(dataNascita), "", anagrafica.getIndirizzoFiscale(), anagrafica.getCodiceBelfioreComuneFiscale(), 'C', email, emailPec);
+								java.sql.Date.valueOf(dataNascita), "", anagrafica.getIndirizzoFiscale(), anagrafica.getCodiceBelfioreComuneFiscale(), 'C', anagrafica.getEmail(), anagrafica.getEmailPec());
 					} else {
 						anaOut.setDenominazione(anagrafica.getDenominazione());
 						anaOut.setTipoAnagrafica(anagrafica.getTipoAnagrafica());
