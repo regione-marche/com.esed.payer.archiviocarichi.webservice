@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.WebRowSet;
@@ -76,6 +77,7 @@ import com.esed.payer.archiviocarichi.webservice.model.InviaDovutiDao;
 import com.esed.payer.archiviocarichi.webservice.util.GenericsDateNumbers;
 import com.esed.payer.archiviocarichi.webservice.util.IuvUtils;
 import com.esed.payer.archiviocarichi.webservice.util.VerificaCodiceFiscale;
+import com.esed.payer.archiviocarichi.webservice.util.VerificaEmail;
 //inizio LP - mail Giorgia 20200608
 //import com.esed.payer.archiviocarichi.webservice.util.geos.Bollettino;
 //import com.esed.payer.archiviocarichi.webservice.util.geos.DatiAnagrafici;
@@ -154,9 +156,24 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	private String listXmlDC = null;
 	private int progressivoFlussoPerInviaDovuti = 0;
 	// fine SR PGNTACWS-2
-	
+	// inizio SR PGNTACWS-5 
+	private BigDecimal[] listaImportiScadenze = null; 
+	private BigDecimal maxImport = null; 
+	// fine SR PGNTACWS-5
+
 	@Override
 	public com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.InserimentoEcResponse inserimentoEC(com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.InserimentoEcRequest in) throws java.rmi.RemoteException, com.esed.payer.archiviocarichi.webservice.srv.FaultType {
+		
+		// inizio SR PGNTACWS-5 arrotondamento importi
+		if(in.getListScadenze() != null && in.getListScadenze().length != 0) {
+			this.listaImportiScadenze = new BigDecimal[in.getListScadenze().length];
+			for (int i = 0; i<in.getListScadenze().length; i++) {
+				listaImportiScadenze[i] = in.getListScadenze()[i].getImpBollettinoRata();
+			}			
+			this.maxImport = Arrays.asList(listaImportiScadenze).stream().max(BigDecimal::compareTo).get();
+		}
+		// fine SR PGNTACWS-5 
+		
 		CachedRowSet ecCached = null;
 		
 		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - inizio");
@@ -387,6 +404,9 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					}
 			
 					//EH2 Scadenze
+					BigDecimal maxImportNew = Arrays.asList(in.getListScadenze()).stream().map(s-> s.getImpBollettinoRata()).max(BigDecimal::compareTo).get();
+					BigDecimal scarto = maxImportNew.subtract(this.maxImport);
+					
 					if (in.getListScadenze()!=null && in.getListScadenze().length>0) {
 						for(Scadenza scadenza : in.getListScadenze()) {
 							numeroRecord++;
@@ -415,11 +435,22 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								identificativoUnivocoVersamentoScadenza = scadenza.getIdentificativoUnivocoVersamento();
 							}
 							
+							
+							// inizio SR PGNTACWS-5 arrotondamento importi							
+							if(scadenza.getImpBollettinoRata().compareTo(this.listaImportiScadenze[scadenza.getNumeroRata()-1]) > 0) {	
+								scadenza.setImpBollettinoRata(scadenza.getImpBollettinoRata().subtract(scarto));
+							} else if(scadenza.getImpBollettinoRata().compareTo(this.listaImportiScadenze[scadenza.getNumeroRata()-1]) < 0) {
+								BigDecimal diff = this.listaImportiScadenze[scadenza.getNumeroRata()-1].subtract(scadenza.getImpBollettinoRata());
+								scadenza.setImpBollettinoRata(scadenza.getImpBollettinoRata().add(diff));
+								scarto = scarto.subtract(diff);								
+							}
+							// fine SR PGNTACWS-5
+							
 							logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH2");
 							elaborazioneFlussiDao.doInsertEH2(progressivoFlusso, "EH2", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), 
 									in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), 
 									in.getImpostaServizio(), documento.getNumeroDocumento(), 
-									GenericsDateNumbers.bigDecimalToDouble(scadenza.getImpBollettinoRata()), //importo dovuto tributi	//TODO da verificare
+									GenericsDateNumbers.bigDecimalToDouble(scadenza.getImpBollettinoRata()), //importo dovuto tributi
 									0,
 									java.sql.Date.valueOf(GenericsDateNumbers.formatData(scadenza.getDataScadenzaRata(),"dd/MM/yyyy","yyyy-MM-dd")),
 									scadenza.getNumeroRata(), 
@@ -451,26 +482,60 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 									}
 								}
 							}
-							if(trovato) {
-								logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEHD");
-								elaborazioneFlussiDao.doInsertEHD(progressivoFlusso, "EHD", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), 
-										in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), 
-										in.getImpostaServizio(), documento.getNumeroDocumento(),
-										dettPag.getNumeroBollettinoPagoPA(),
-										dettPag.getIdentificativoDominio(),
-										GenericsDateNumbers.bigDecimalToDouble(dettPag.getImporto()),
-										dettPag.getIBANBancario(), 
-										(dettPag.getIBANPostale() != null && dettPag.getIBANPostale().trim().length() > 0 ? dettPag.getIBANPostale().trim() : ""),
-										dettPag.getCodiceTipologiaServizio(), //LP PG22XX05
-										'C',
-										//inizio SB PAGONET-537
-										dettPag.getMetadatiPagoPATariTefaKey(),
-										dettPag.getMetadatiPagoPATariTefaValue()
-										//fine SB PAGONET-537
-										);
-							} else {
+							if(!trovato) {		
 								throw new ValidazioneException("Per DettaglioPagamento non si riesce a valorizzare il numero Bollettino!");
 							}
+						}
+						
+						// inizio SR PGNTACWS-5 arrotondamento importi
+						Map<String, List<DettaglioPagamento>> groupedByNumeroAvviso = Arrays.asList(listPagamento).stream()
+								.collect(Collectors.groupingBy(DettaglioPagamento::getNumeroBollettinoPagoPA));
+						BigDecimal[] totRateDettagli = new BigDecimal[in.getListScadenze().length];
+						
+						for(Scadenza scadenza : Arrays.asList(in.getListScadenze())) {
+							BigDecimal importo = groupedByNumeroAvviso.get(scadenza.getNumeroBollettinoPagoPA())
+									.stream()
+									.map(DettaglioPagamento::getImporto)
+									.reduce(BigDecimal.ZERO, BigDecimal::add);
+							totRateDettagli[scadenza.getNumeroRata()-1] = importo;
+						}
+						
+						BigDecimal maxImportDett = Arrays.asList(totRateDettagli).stream().max(BigDecimal::compareTo).get();
+						BigDecimal scartoDett = maxImportDett.subtract(this.maxImport);
+						// fine SR PGNTACWS-5  
+						
+						for(DettaglioPagamento dettPag : listPagamento) {
+							// inizio SR PGNTACWS-5 arrotondamento importi
+							if(dettPag.getNumeroRata() > 0) {
+								BigDecimal tot = totRateDettagli[dettPag.getNumeroRata()-1];							
+								if(tot.compareTo(in.getListScadenze()[dettPag.getNumeroRata()-1].getImpBollettinoRata()) > 0) {
+									dettPag.setImporto(dettPag.getImporto().subtract(scartoDett));
+									totRateDettagli[dettPag.getNumeroRata()-1] = totRateDettagli[dettPag.getNumeroRata()-1].subtract(scartoDett);
+								} else if(tot.compareTo(in.getListScadenze()[dettPag.getNumeroRata()-1].getImpBollettinoRata()) < 0) {
+									BigDecimal diff = in.getListScadenze()[dettPag.getNumeroRata()-1].getImpBollettinoRata().subtract(tot);
+									dettPag.setImporto(dettPag.getImporto().add(diff));
+									totRateDettagli[dettPag.getNumeroRata()-1] = totRateDettagli[dettPag.getNumeroRata()-1].add(diff);
+									scartoDett = scartoDett.subtract(diff);
+								}
+							}
+							// fine SR PGNTACWS-5 arrotondamento importi
+							
+							logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEHD");											
+							elaborazioneFlussiDao.doInsertEHD(progressivoFlusso, "EHD", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), 
+									in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), 
+									in.getImpostaServizio(), documento.getNumeroDocumento(),
+									dettPag.getNumeroBollettinoPagoPA(),
+									dettPag.getIdentificativoDominio(),
+									GenericsDateNumbers.bigDecimalToDouble(dettPag.getImporto()),
+									dettPag.getIBANBancario(), 
+									(dettPag.getIBANPostale() != null && dettPag.getIBANPostale().trim().length() > 0 ? dettPag.getIBANPostale().trim() : ""),
+									dettPag.getCodiceTipologiaServizio(), //LP PG22XX05
+									'C',
+									//inizio SB PAGONET-537
+									dettPag.getMetadatiPagoPATariTefaKey(),
+									dettPag.getMetadatiPagoPATariTefaValue()
+									//fine SB PAGONET-537
+									);
 						}
 					}
 					
@@ -614,18 +679,31 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					if (dataNascita.equals(""))
 						dataNascita = "1900-01-01";
 					String codiceBelfioreComuneNascita = anagrafica.getCodiceBelfioreComuneNascita()==null?"":anagrafica.getCodiceBelfioreComuneNascita();
-					String email = anagrafica.getEmail()==null?"":anagrafica.getEmail();
-					String emailPec = anagrafica.getEmailPec()==null?"":anagrafica.getEmailPec();
+					
+					// inizio SR PGNTACWS-9
+					if (anagrafica.getEmailPec() == null) {
+						throw new ValidazioneException("emailPec non valorizzata");
+					} else if (!anagrafica.getEmailPec().trim().equals("") && !VerificaEmail.validateEmail(anagrafica.getEmailPec())) {
+						throw new ValidazioneException("formato emailPec non valido");
+					}
+					
+					if (anagrafica.getEmail() == null) {
+						throw new ValidazioneException("email non valorizzata");
+					} else if (!anagrafica.getEmail().trim().equals("") && !VerificaEmail.validateEmail(anagrafica.getEmail())) {
+						throw new ValidazioneException("formato email non valido");
+					}					
+					// fine SR PGNTACWS-9
+					
 					if (anaOut.getProgressivoFlusso() == null) {
 						logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - doInsertEH8");
 						//inizio LP PG200360
 						numeroRecord++;
-						//fine LP PG200360
+						//fine LP PG200360				
 						elaborazioneFlussiDao.doInsertEH8(progressivoFlusso, "EH8", in.getCodiceUtente(), java.sql.Date.valueOf(dataFlusso), in.getTipoServizio(), 
 								in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), 
 								anagrafica.getCodiceFiscale().toUpperCase(), anagrafica.getDenominazione(), anagrafica.getTipoAnagrafica(),
 								codiceBelfioreComuneNascita, 
-								java.sql.Date.valueOf(dataNascita), "", anagrafica.getIndirizzoFiscale(), anagrafica.getCodiceBelfioreComuneFiscale(), 'C', email, emailPec);
+								java.sql.Date.valueOf(dataNascita), "", anagrafica.getIndirizzoFiscale(), anagrafica.getCodiceBelfioreComuneFiscale(), 'C', anagrafica.getEmail(), anagrafica.getEmailPec());
 					} else {
 						anaOut.setDenominazione(anagrafica.getDenominazione());
 						anaOut.setTipoAnagrafica(anagrafica.getTipoAnagrafica());
@@ -711,8 +789,10 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					if (checkDuplicate) 
 						throw new DuplicateException(ex.getMessage());
 					else {
-						if (!flagSuccessfullExecution)
+						if (!flagSuccessfullExecution) {
 							archivioCarichiDao.doRollbackArchivioCarichi(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), documento.getNumeroDocumento());
+							archivioCarichiDao.doRollbackArchivioCarichiELG(fileNameToElab, progressivoFlusso);
+						}
 						throw ex;
 					}
 				}
@@ -723,7 +803,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
         	if(propertiesTree().getProperty(PropKeys.servizioJppa.format()) != null && propertiesTree().getProperty(PropKeys.servizioJppa.format()).equals("Y")) {
         		InviaDovutiDao dao = new InviaDovutiDao(connection, getSchemaDifferito(dbSchemaCodSocieta));
     			String codiceIpaComune = "";
-    			codiceIpaComune = dao.getCodiceIpa(in.getListTributi(0).getIdentificativoDominio(), in.getCodiceEnte());
+    			String idDominioComune = in.getConfigurazione().getConfigurazioneIUV().getIdentificativoDominio();
+    			codiceIpaComune = dao.getCodiceIpa(idDominioComune, in.getCodiceEnte());
     			
     			CaricaDebitiJppa jppa = new CaricaDebitiJppa();
     			String token = jppa.login(propertiesTree().getProperty(PropKeys.username.format()), propertiesTree().getProperty(PropKeys.password.format()), codiceIpaComune);
@@ -813,18 +894,38 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
     						
     						String codiceIpaProvincia = "";
     						if(Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario())) {
-    							codiceIpaProvincia = dao.getCodiceIpa(in.getListTributi(1).getIdentificativoDominio(), in.getCodiceEnte());
+    							String idDominioProvincia = Arrays.asList(in.getListTributi())
+    									.stream()
+    									.filter(t -> !t.getIdentificativoDominio().equals(idDominioComune))
+    									.findFirst()
+    									.get()
+    									.getIdentificativoDominio();
+    							Ente ente = enteDato.doDetailToCodFis("", idDominioProvincia,"");
+    							codiceIpaProvincia = ente.getCodIpaEnte();
     						}
     						
     						List<DovutoDto> dovutiList = new ArrayList<>();
     						
+							ContribuenteDto contribuente = new ContribuenteDto(
+									"", // cap
+									"", // civico
+									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().toUpperCase(), 
+									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() >= 16 ? anagrafica.getDenominazione() : null, // cognome=nome+cognome
+									anagrafica.getEmail() != null ? anagrafica.getEmail() : null, // email
+									anagrafica.getIndirizzoFiscale() != null ? anagrafica.getIndirizzoFiscale() : null, // indirizzo
+									"", // localita
+									"", // nazione
+									"", // nome
+									"", // provincia
+									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? anagrafica.getDenominazione() : null, // ragioneSociale
+									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? TipoIdentificativoUnivocoEnum.GIURID : TipoIdentificativoUnivocoEnum.FIS 
+									);
+													
     						// Se il bollettino è multirata, invio le rate come dovuti separati
     						if (in.getListScadenze().length > 1) {
-
-    							List<DettaglioDovutoDto> dettaglioList = new ArrayList<>();
     							int progressivo = 1;
-
-    							for(Scadenza scadenza : in.getListScadenze()) {																						     								
+    							for(Scadenza scadenza : in.getListScadenze()) {		
+    								String iuvScadenza = scadenza.getIdentificativoUnivocoVersamento() != null && !scadenza.getIdentificativoUnivocoVersamento().isEmpty() ? scadenza.getIdentificativoUnivocoVersamento() : scadenza.getNumeroBollettinoPagoPA().substring(1);
     								DatoAccertamentoDto datoAccertamento = new DatoAccertamentoDto(
 											pgResponse.getAnagraficaBollettino().getAnnoDocumento(), 
 											CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio()).getValue(), 
@@ -833,7 +934,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 									
 									DettaglioDovutoDto dettaglio = new DettaglioDovutoDto(
 											pgResponse.getCausale() + ", rata " + scadenza.getNumeroRata(),
-											pgResponse.getFlagMultiBeneficiario() ? (progressivo == 1 ? "c_g479" : "p_PU") : codiceIpaComune, 
+											Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario()) ? (progressivo == 1 ? codiceIpaComune : codiceIpaProvincia) : codiceIpaComune, 
 											"codiceLotto",
 											CodiceTipoDebitoEnum.fromValue(pgResponse.getTipologiaServizio()),
 											OffsetDateTime.parse(new Date(scadenza.getDataScadenzaRata()).toInstant().atOffset(ZoneOffset.UTC).toString(),DateTimeFormatter.ISO_OFFSET_DATE_TIME),
@@ -841,7 +942,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 											null,
 											Arrays.asList(datoAccertamento),
 											"multirata",
-											scadenza.getIdentificativoUnivocoVersamento()+scadenza.getNumeroRata(),
+											idDominioComune+"_"+iuvScadenza,
 											scadenza.getImpBollettinoRata().doubleValue() / 100D,
 											null, // BigDecimal importo spese di notifica
 											null, // MarcaDaBolloDto									
@@ -849,43 +950,25 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 											null, // List<ParametroDebitoDto>
 											SpeseNotificaDaAttualizzareEnum.OFF  // SpeseNotificaDaAttualizzareEnum
 											);								
+	    							
+	    							NumeroAvvisoDto numeroAvvisoDto = new NumeroAvvisoDto(true, scadenza.getNumeroBollettinoPagoPA(), 1);
 
-    								dettaglioList.add(dettaglio);
+	    							TestataDovutoDto testata = new TestataDovutoDto(
+	    									contribuente, 
+	    									documento.getCausale(), 
+	    									idDominioComune+"_"+iuvScadenza);
+	    							
+	    							DovutoDto dovuto = new DovutoDto(
+	    									Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario()) ? ContestoDovutoEnum.MULTIBENEFICIARIO : ContestoDovutoEnum.MONOBENEFICIARIO,
+	    									Arrays.asList(dettaglio),
+	    									numeroAvvisoDto, 
+	    									testata);   						
+	    							dovutiList.add(dovuto);
     								progressivo++;							
     							}
-    							
-    							ContribuenteDto contribuente = new ContribuenteDto(
-    									"", // cap
-    									"", // civico
-    									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().toUpperCase(), 
-    									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() >= 16 ? anagrafica.getDenominazione() : null, // cognome=nome+cognome
-    									anagrafica.getEmail() != null ? anagrafica.getEmail() : null, // email
-    									anagrafica.getIndirizzoFiscale() != null ? anagrafica.getIndirizzoFiscale() : null, // indirizzo
-    									"", // localita
-    									"", // nazione
-    									"", // nome
-    									"", // provincia
-    									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? anagrafica.getDenominazione() : null, // ragioneSociale
-    									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? TipoIdentificativoUnivocoEnum.GIURID : TipoIdentificativoUnivocoEnum.FIS 
-    									);
-    							
-    							TestataDovutoDto testata = new TestataDovutoDto(
-    									contribuente, 
-    									documento.getCausale(), 
-    									documento.getIdentificativoUnivocoVersamento()+documento.getNumeroDocumento()); 
-    							
-    							NumeroAvvisoDto numeroAvvisoDto = new NumeroAvvisoDto(true, pgResponse.getAnagraficaBollettino().getNumeroDocumento(), 1);
-
-    							DovutoDto dovuto = new DovutoDto(
-    									Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario()) ? ContestoDovutoEnum.MULTIBENEFICIARIO : ContestoDovutoEnum.MONOBENEFICIARIO,
-    									dettaglioList,
-    									numeroAvvisoDto, 
-    									testata);   						
-    							dovutiList.add(dovuto);
     						} 
-    						// Se il bollettino è multirata o se è soluzione unica, invio un dovuto con l'importo totale.
-//    						DovutoDto dovuto = new DovutoDto(pgResponse, codiceIpaComune, codiceIpaProvincia, Arrays.asList(in.getListTributi()), in.getAnagrafica()); 
-    						
+    						    					
+    						// Se il bollettino è multirata o se è soluzione unica, invio un dovuto con l'importo totale.    						
     						List<DettaglioDovutoDto> dettaglioList = new ArrayList<>();
 							int progressivo = 1;
     						for(Tributo tributo : Arrays.asList(in.getListTributi())){
@@ -906,7 +989,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 										null,
 										Arrays.asList(datoAccertamento),
 										"unica",
-										pgResponse.getIdentificativoUnivocoVersamento()+pgResponse.getIdentificativoBollettino(),
+										idDominioComune+"_"+pgResponse.getIdentificativoUnivocoVersamento(),
 										tributo.getImpTributo().doubleValue() / 100D,
 										null, // BigDecimal importo spese di notifica
 										null, // MarcaDaBolloDto									
@@ -918,29 +1001,13 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								progressivo++;
 								dettaglioList.add(dettaglio);
     						}
-    						
-							ContribuenteDto contribuente = new ContribuenteDto(
-									"", // cap
-									"", // civico
-									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().toUpperCase(), 
-									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() >= 16 ? anagrafica.getDenominazione() : null, // cognome=nome+cognome
-									anagrafica.getEmail() != null ? anagrafica.getEmail() : null, // email
-									anagrafica.getIndirizzoFiscale() != null ? anagrafica.getIndirizzoFiscale() : null, // indirizzo
-									"", // localita
-									"", // nazione
-									"", // nome
-									"", // provincia
-									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? anagrafica.getDenominazione() : null, // ragioneSociale
-									pgResponse.getAnagraficaBollettino().getCodiceFiscale_PIVA().length() < 16 ? TipoIdentificativoUnivocoEnum.GIURID : TipoIdentificativoUnivocoEnum.FIS 
-									);
-							
+    								
+							NumeroAvvisoDto numeroAvvisoDto = new NumeroAvvisoDto(true, pgResponse.getIdentificativoBollettino(), 1);
 							TestataDovutoDto testata = new TestataDovutoDto(
 									contribuente, 
 									documento.getCausale(), 
-									documento.getIdentificativoUnivocoVersamento()+documento.getNumeroDocumento()); 
+									idDominioComune+"_"+pgResponse.getIdentificativoUnivocoVersamento());
 							
-							NumeroAvvisoDto numeroAvvisoDto = new NumeroAvvisoDto(true, pgResponse.getIdentificativoBollettino(), 1);
-
 							DovutoDto dovuto = new DovutoDto(
 									Boolean.TRUE.equals(pgResponse.getFlagMultiBeneficiario()) ? ContestoDovutoEnum.MULTIBENEFICIARIO : ContestoDovutoEnum.MONOBENEFICIARIO,
 									dettaglioList, 
@@ -949,7 +1016,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							
     						dovutiList.add(dovuto);
     					    						
-    						RispostaInviaDovutiDto res = jppa.inviaDovuti(token, codiceIpaComune, dovutiList); // codiceIpaComune
+    						RispostaInviaDovutiDto res = jppa.inviaDovuti(token, codiceIpaComune, dovutiList); 
     						if(res != null) {
     							dao.aggiornaFlagInviaDovuto(progressivoFlussoPerInviaDovuti, getSchemaDifferito(dbSchemaCodSocieta)); 							
     						}
@@ -973,7 +1040,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
         } catch (Exception e) {
 			error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC failed, generic error due to: ", e);
 			response.setCodiceEsito("01");
-			response.setMessaggioEsito("Errore generico");
+			response.setMessaggioEsito("Errore generico");			
 		} finally {
 			//inizio LP PG21XX04 Leak
     		//closeConnection(connection);
