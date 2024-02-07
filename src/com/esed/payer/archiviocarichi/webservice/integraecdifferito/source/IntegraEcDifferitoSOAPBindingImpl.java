@@ -420,6 +420,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								if (in.getListScadenze().length==1) {
 									numeroBollettinoScadenzaPagoPA = numeroBollettinoPagoPA;
 									identificativoUnivocoVersamentoScadenza = identificativoUnivocoVersamento;
+									scadenza.setNumeroBollettinoPagoPA(numeroBollettinoPagoPA); // SR PGNTACWS-11
 								} else {
 									String[] codiciScadenza = IuvUtils.calcolaIuv(in.getCodiceEnte(),configurazione.getConfigurazioneIUV(), connection, getSchemaDifferito(dbSchemaCodSocieta));
 									numeroBollettinoScadenzaPagoPA = codiciScadenza[0] ;
@@ -462,19 +463,20 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					
 					//inizio LP PG210130
 					//EHD dettaglio pagamento
-					if(listPagamento != null && listPagamento.length > 0) {
-						for(DettaglioPagamento dettPag : listPagamento) {
+					if(listPagamento != null && listPagamento.length > 0) {						
+						for (DettaglioPagamento dettPag : listPagamento) {
 							numeroRecord++;
 							int numeroRata = dettPag.getNumeroRata();
 							logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - dettPag numeroRata: " + numeroRata);
 							boolean trovato = false;
-							if(numeroRata == 0) {
+
+							if (numeroRata == 0) {
 								dettPag.setNumeroBollettinoPagoPA(numeroBollettinoPagoPA);
 								trovato = true;
 							} else {
-								for(Scadenza scadenza : in.getListScadenze()) {
-									if(scadenza.getNumeroRata() == numeroRata) {
-									    if(scadenza.getNumeroBollettinoPagoPA() != null) {
+								for (Scadenza scadenza : in.getListScadenze()) {
+									if (scadenza.getNumeroRata() == numeroRata) {
+										if (scadenza.getNumeroBollettinoPagoPA() != null) {
 											dettPag.setNumeroBollettinoPagoPA(scadenza.getNumeroBollettinoPagoPA());
 											trovato = true;
 										}
@@ -482,7 +484,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 									}
 								}
 							}
-							if(!trovato) {		
+							if (!trovato) {
 								throw new ValidazioneException("Per DettaglioPagamento non si riesce a valorizzare il numero Bollettino!");
 							}
 						}
@@ -681,17 +683,17 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					String codiceBelfioreComuneNascita = anagrafica.getCodiceBelfioreComuneNascita()==null?"":anagrafica.getCodiceBelfioreComuneNascita();
 					
 					// inizio SR PGNTACWS-9
-					if (anagrafica.getEmailPec() == null) {
-						throw new ValidazioneException("emailPec non valorizzata");
-					} else if (!anagrafica.getEmailPec().trim().equals("") && !VerificaEmail.validateEmail(anagrafica.getEmailPec())) {
-						throw new ValidazioneException("formato emailPec non valido");
+					if (anagrafica.getEmailPec() != null) {
+						if (!anagrafica.getEmailPec().trim().equals("") && !VerificaEmail.validateEmail(anagrafica.getEmailPec())) {
+							throw new ValidazioneException("formato emailPec non valido");
+						}
 					}
-					
-					if (anagrafica.getEmail() == null) {
-						throw new ValidazioneException("email non valorizzata");
-					} else if (!anagrafica.getEmail().trim().equals("") && !VerificaEmail.validateEmail(anagrafica.getEmail())) {
-						throw new ValidazioneException("formato email non valido");
-					}					
+
+					if (anagrafica.getEmail() != null) {
+						if (!anagrafica.getEmail().trim().equals("") && !VerificaEmail.validateEmail(anagrafica.getEmail())) {
+							throw new ValidazioneException("formato email non valido");
+						}
+					}				
 					// fine SR PGNTACWS-9
 					
 					if (anaOut.getProgressivoFlusso() == null) {
