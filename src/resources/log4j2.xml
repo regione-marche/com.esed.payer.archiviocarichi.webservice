@@ -31,7 +31,7 @@
         </RollingFile>
         <RollingFile name="com-esed-payer-archiviocarichi-ws-debug"
                 	 fileName="${sys:jboss.server.log.dir}/com-esed-payer-archiviocarichi-ws-debug.log"
-                	 filePattern="com-esed-payer-archiviocarichi-ws.%i.log"
+                	 filePattern="com-esed-payer-archiviocarichi-ws-debug.%i.log"
                      ignoreExceptions="false" filePermissions="rw-rw-r--">
 			<JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/>
             <Policies>
@@ -42,7 +42,7 @@
         </RollingFile>
 
     </Appenders>
-    <Loggers>
+    <Loggers>         
 		<Logger name="com.esed.payer.archiviocarichi.webservice" level="DEBUG" additivity="false">
 			<AppenderRef ref="com-esed-payer-archiviocarichi-ws" />
 			<AppenderRef ref="com-esed-payer-archiviocarichi-ws-debug"/>
