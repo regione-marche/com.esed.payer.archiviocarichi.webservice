@@ -693,7 +693,10 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						if (!anagrafica.getEmail().trim().equals("") && !VerificaEmail.validateEmail(anagrafica.getEmail())) {
 							throw new ValidazioneException("formato email non valido");
 						}
-					}				
+					}	
+					
+					String email = anagrafica.getEmail() == null ? "" : anagrafica.getEmail();
+					String emailPec = anagrafica.getEmailPec() == null ? "" : anagrafica.getEmailPec();
 					// fine SR PGNTACWS-9
 					
 					if (anaOut.getProgressivoFlusso() == null) {
@@ -705,7 +708,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 								in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), 
 								anagrafica.getCodiceFiscale().toUpperCase(), anagrafica.getDenominazione(), anagrafica.getTipoAnagrafica(),
 								codiceBelfioreComuneNascita, 
-								java.sql.Date.valueOf(dataNascita), "", anagrafica.getIndirizzoFiscale(), anagrafica.getCodiceBelfioreComuneFiscale(), 'C', anagrafica.getEmail(), anagrafica.getEmailPec());
+								java.sql.Date.valueOf(dataNascita), "", anagrafica.getIndirizzoFiscale(), anagrafica.getCodiceBelfioreComuneFiscale(), 'C', email, emailPec);
 					} else {
 						anaOut.setDenominazione(anagrafica.getDenominazione());
 						anaOut.setTipoAnagrafica(anagrafica.getTipoAnagrafica());
