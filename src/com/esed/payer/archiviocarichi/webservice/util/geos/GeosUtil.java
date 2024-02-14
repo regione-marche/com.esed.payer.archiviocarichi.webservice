@@ -191,8 +191,17 @@ public class GeosUtil {
 	public static DatiAnagrafici extractAna(ResultSet resultSet) throws SQLException {
 		String denominazione = resultSet.getString("DEB_NOME_COGN_RAG_SOC");
 		String codFis = resultSet.getString("DEB_CODICE_FISCALE");
+		String cap="";
 		String indirizzo = resultSet.getString("DEB_INDIRIZZO");
-		String cap = resultSet.getString("DEB_CAP");
+		String[] capIndirizzo = indirizzo.split("\\|");
+		if(capIndirizzo[1].length()>0) {
+			System.out.println("capIndirizzo[1] (PARTE CAP)" + capIndirizzo[1]);
+			cap = capIndirizzo[1];
+		}else {
+			System.out.println("Cap DEB_CAP " + cap);
+			cap = resultSet.getString("DEB_CAP");
+		}
+		System.out.println("cap - " + cap);
 		String citta = resultSet.getString("DEB_COMUNE");
 		String siglaProv = resultSet.getString("DEB_PROVINCIA");
 		
