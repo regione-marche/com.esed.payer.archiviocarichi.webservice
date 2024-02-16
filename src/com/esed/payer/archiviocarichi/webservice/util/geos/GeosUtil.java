@@ -193,7 +193,7 @@ public class GeosUtil {
 		String codFis = resultSet.getString("DEB_CODICE_FISCALE");
 		String cap="";
 		String indirizzo = resultSet.getString("DEB_INDIRIZZO");
-		if(indirizzo.contains("|")) {
+		if(indirizzo!=null && indirizzo.contains("|")) {
 			  String[] capIndirizzo = indirizzo.split("\\|");
 			  if(capIndirizzo[1].length()>0) {
 					System.out.println("capIndirizzo[1] (PARTE CAP)" + capIndirizzo[1]);
