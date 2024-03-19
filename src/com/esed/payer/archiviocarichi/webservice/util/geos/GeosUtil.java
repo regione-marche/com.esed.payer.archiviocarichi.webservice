@@ -162,7 +162,7 @@ public class GeosUtil {
 		String tipoTemplate = config.getProperty(templateKey);
 
 		if("POSTE".equals(tipoIban))
-			tipoTemplate = "POSTE";
+			tipoTemplate = "POSTE_";
 	    else
 			tipoTemplate = "STANDARD_";
 		
@@ -317,7 +317,7 @@ public class GeosUtil {
 	 * L'IdDominio, corrisponde al codice fiscale presente sull'Ente che si trova sulla tabella PYENTTB.
 	 * 
 //	La chiave per andare a prendere il valore di questa stringa in base al "numero avviso pagoPa" di appartenenza,
-//	dovrà essere:
+//	dovrï¿½ essere:
 //	                CUTECUTE.IDDOMINIO.AUX_DIGIT.APPLICATION_CODE = ciamammacomemdsaifjsdlfjld
 //	 
 //	Esempio:
