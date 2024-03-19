@@ -91,8 +91,12 @@ public class GeosUtil {
 
 	public static Flusso extractFlusso(ResultSet resultSet, String dbSchemaCodSocieta) throws SQLException, ConfigurazioneException, ValidazioneException {
 
+		if(dbSchemaCodSocieta!=null) {
+			logger.info("dbSchemaCodSocieta - " + dbSchemaCodSocieta);
+		}
 		String postemb = configuration.getProperty(PropKeys.STAMPAPOSTEMB.format(dbSchemaCodSocieta));
 		if(postemb==null){
+			logger.info("lettura postemb = null");
 			postemb="Y";
 		}
 		String cuteCute = resultSet.getString("FLU_CUTECUTE");
