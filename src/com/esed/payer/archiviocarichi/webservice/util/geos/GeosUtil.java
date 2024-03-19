@@ -4,8 +4,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import com.esed.payer.archiviocarichi.webservice.config.PropKeys;
 import com.esed.payer.archiviocarichi.webservice.exception.ConfigurazioneException;
 import com.esed.payer.archiviocarichi.webservice.exception.ValidazioneException;
+import com.seda.commons.logger.CustomLoggerManager;
+import com.seda.commons.logger.LoggerWrapper;
 import com.seda.commons.properties.tree.PropertiesNodeException;
 import com.seda.commons.properties.tree.PropertiesTree;
 import com.seda.compatibility.SystemVariable;
@@ -23,22 +26,20 @@ import com.seda.payer.pgec.webservice.commons.source.CommonsServiceLocator;
 
 
 public class GeosUtil {
-	
+
 	public static int lenEuro = 10;
 	private static PropertiesTree configuration = null;
-	private  Properties config = null;
-	
-	
+	private Properties config = null;
+	protected static LoggerWrapper logger = CustomLoggerManager.get(GeosUtil.class);
+
+
 	/**
-	 * @implNote
-	 * Inizializzazione della configurazione e valorizzazione del campo
-	 * {@code configuration}
-	 * 
-	 * 
 	 * @throws PropertiesNodeException
 	 * @throws Exception
+	 * @implNote Inizializzazione della configurazione e valorizzazione del campo
+	 * {@code configuration}
 	 */
-	public static void initConfiguration() throws PropertiesNodeException,Exception  {
+	public static void initConfiguration() throws PropertiesNodeException, Exception {
 		SystemVariable sv = new SystemVariable();
 		String rootPath = sv.getSystemVariableValue("GEOSREST_WEB_ROOT");
 		sv = null;
@@ -47,16 +48,13 @@ public class GeosUtil {
 			configuration = new PropertiesTree(rootPath);
 		}
 	}
-	
-	
-
 
 
 	public static void setConfiguration() throws Exception {
-		if(configuration == null) {
+		if (configuration == null) {
 			try {
 				initConfiguration();
-				if(configuration == null) {
+				if (configuration == null) {
 					throw new ConfigurazioneException("Errore in GeosUtil getConfiguration (null)");
 				}
 			} catch (PropertiesNodeException e) {
@@ -65,38 +63,40 @@ public class GeosUtil {
 			}
 		}
 	}
-	
+
 	public static PropertiesTree getConfiguration() {
 		return configuration;
 	}
 
 	public static String getUrlRestGeos(String cutecute) throws ConfigurazioneException {
 		PropertiesTree config = getConfiguration();
-		String key = String.format("%s.wsRest.GEOS", cutecute); 
+		String key = String.format("%s.wsRest.GEOS", cutecute);
 		String urlGeos = config.getProperty(key);
-		if(urlGeos == null || urlGeos.trim().length()== 0) {
+		if (urlGeos == null || urlGeos.trim().length() == 0) {
 			throw new ConfigurazioneException("Manca configurazione per Url WS REST GEOS");
 		}
 		return urlGeos.trim();
 	}
-	
-	public static String leftZeroPad(String s, int minLen, int maxLen)
-	{
-		if(s.length() < minLen)
-		{
+
+	public static String leftZeroPad(String s, int minLen, int maxLen) {
+		if (s.length() < minLen) {
 			int zeri = minLen - s.length();
 			return String.format("%0" + zeri + "d", 0) + s;
 		}
-		if(s.length() > maxLen)
-		{
+		if (s.length() > maxLen) {
 			return s.substring(s.length() - maxLen);
 		}
 		return s;
 	}
-	
-	public static Flusso extractFlusso(ResultSet resultSet) throws SQLException, ConfigurazioneException, ValidazioneException {
+
+	public static Flusso extractFlusso(ResultSet resultSet, String dbSchemaCodSocieta) throws SQLException, ConfigurazioneException, ValidazioneException {
+
+		String postemb = configuration.getProperty(PropKeys.STAMPAPOSTEMB.format(dbSchemaCodSocieta));
+		if(postemb==null){
+			postemb="Y";
+		}
 		String cuteCute = resultSet.getString("FLU_CUTECUTE");
-		String ente = resultSet.getString("FLU_ENTE"); 
+		String ente = resultSet.getString("FLU_ENTE");
 		String tipoStampaFlu = "B";
 		boolean ibanPostale = false;
 		String docIban = resultSet.getString("DOC_IBAN");
@@ -104,33 +104,41 @@ public class GeosUtil {
 		if (docIban == null || docIban.trim().length() < 10) {
 			throw new ValidazioneException("Documento non stampabile per iban non valido");
 		} else {
-			if (docIban.substring(5,10).equals("07601")){
-	        	ibanPostale = true;
-	        	System.out.println("ibanPostale: "+ibanPostale);
-	        	System.out.println("docIban.substring" + docIban.substring(5,10).equals("07601"));
-	        }
+			if (docIban.substring(5, 10).equals("07601")) {
+				ibanPostale = true;
+				System.out.println("ibanPostale: " + ibanPostale);
+				System.out.println("docIban.substring" + docIban.substring(5, 10).equals("07601"));
+			}
 		}
-        String tipoIban = ibanPostale ? "POSTE" : "STANDARD";
-        String tipoTemplate = getTipoTemplate(resultSet.getString("FLU_CUTECUTE"),resultSet.getString("FLU_ENTE"),resultSet.getString("DOC_TIPOLOGIA_SERVIZIO"), tipoIban);
-        String tipoStampa = tipoTemplate.replace("_","");
-        if (tipoStampa.equalsIgnoreCase("STANDARD"))
-        	tipoStampaFlu = "B";
-        if (tipoStampa.equalsIgnoreCase("POSTE"))
-        	tipoStampaFlu = "P";
-        //PGNTACWS-1 - inizio
-        String flagMultibeneficiario = "";
-        try {
-        	flagMultibeneficiario = resultSet.getString("FLAG_MULTIBEN"); 
-        } catch (Exception ex) {
-        	ex.printStackTrace();
-        } 
-        if (flagMultibeneficiario!=null && flagMultibeneficiario.trim().equals("Y")) {
-        	if(ibanPostale==false) {
-        		tipoStampaFlu = "B";
-        	}else {
-        		tipoStampaFlu = "P";
-        	}
-        }
+		String tipoIban = ibanPostale ? "POSTE" : "STANDARD";
+		String tipoTemplate = getTipoTemplate(resultSet.getString("FLU_CUTECUTE"), resultSet.getString("FLU_ENTE"), resultSet.getString("DOC_TIPOLOGIA_SERVIZIO"), tipoIban);
+		String tipoStampa = tipoTemplate.replace("_", "");
+		if (tipoStampa.equalsIgnoreCase("STANDARD"))
+			tipoStampaFlu = "B";
+		if (tipoStampa.equalsIgnoreCase("POSTE"))
+			tipoStampaFlu = "P";
+		//PGNTACWS-1 - inizio
+		String flagMultibeneficiario = "";
+		try {
+			flagMultibeneficiario = resultSet.getString("FLAG_MULTIBEN");
+		} catch (Exception ex) {
+			logger.info("Errore flagMultibeneficiario resultSet.getString(\"FLAG_MULTIBEN\")");
+			ex.printStackTrace();
+		}
+
+		if (flagMultibeneficiario != null && !flagMultibeneficiario.isEmpty()) {
+			if (flagMultibeneficiario.equals("Y") && postemb.equals("Y")) {
+				logger.info("multibeneficiario = Y e stampaMBPoste = Y");
+				tipoStampaFlu = !ibanPostale ? "B" : "P";
+			} else if (flagMultibeneficiario.equals("Y") && postemb.equals("N")) {
+				logger.info("multibeneficiario = Y e stampaMBPoste = N stampo solo banca");
+				tipoStampaFlu = "B";
+			} else if (flagMultibeneficiario.equals("N")) {
+				logger.info("multibeneficiario = N se poste stampo poste altrimenti banca");
+				tipoStampaFlu = !ibanPostale ? "B" : "P";
+			}
+		}
+
         //PGNTACWS-1 - fine
         String idFlusso = resultSet.getString("FLU_ID_FLUSSO"); //TODO da verificare se serve
 		
@@ -154,7 +162,7 @@ public class GeosUtil {
 		String tipoTemplate = config.getProperty(templateKey);
 
 		if("POSTE".equals(tipoIban))
-			tipoTemplate = "POSTE_";
+			tipoTemplate = "POSTE";
 	    else
 			tipoTemplate = "STANDARD_";
 		

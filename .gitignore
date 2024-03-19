@@ -9,3 +9,4 @@
 .log
 /Logs/
 /target/
+/.apt_generated/

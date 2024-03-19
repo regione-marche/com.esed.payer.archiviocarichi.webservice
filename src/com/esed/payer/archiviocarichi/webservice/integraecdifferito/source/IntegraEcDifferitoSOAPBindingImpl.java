@@ -1721,7 +1721,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					logger.debug("richiestaAvvisoPagoPa - Elaborazione resultset");
 					// primo avviso con tutte le colonne Debitore/Docum/Avviso
 					     targetPdfPath = resultSet.getString("FLU_FOLDER");
-				         curFlusso = GeosUtil.extractFlusso(resultSet);
+				         curFlusso = GeosUtil.extractFlusso(resultSet,dbSchemaCodSocieta);
 						 //inizio LP - mail Giorgia 20200608
 				         //com.esed.payer.archiviocarichi.webservice.util.geos.Documento curDoc = GeosUtil.extractDoc(resultSet);
 				         com.seda.payer.commons.geos.Documento curDoc = GeosUtil.extractDoc(resultSet);
