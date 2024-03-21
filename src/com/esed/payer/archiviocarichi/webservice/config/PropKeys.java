@@ -24,6 +24,7 @@ public enum PropKeys {
 	, password
 	, idEnte
 	, servizioJppa
+	, STAMPAPOSTEMB
 	// fine SR 20230108
 	;
 
