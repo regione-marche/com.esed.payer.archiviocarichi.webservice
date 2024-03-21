@@ -212,6 +212,19 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			String dataFlusso = GenericsDateNumbers.calendarToString(calCurrentDate, "yyyy-MM-dd");		//data flusso nel formato AAAA-MM-GG
 			String fileNameToElab =  configurazione.getIdentificativoFlusso();
 			System.out.println("Nome Flusso:" + fileNameToElab);
+
+			//INIZIO CD PGNTACWS-15
+			boolean stampaEseguita = false;
+			String flagStampaEseg = fileNameToElab.substring(fileNameToElab.length()-2, fileNameToElab.length());
+			String fileNameToElabSeStampaEseguita = "";
+			if(flagStampaEseg.equals("_s")) {
+				stampaEseguita = true;
+				fileNameToElabSeStampaEseguita = configurazione.getIdentificativoFlusso().substring(0,fileNameToElab.length()-2);  //ripristino senza s
+				configurazione.setIdentificativoFlusso(fileNameToElabSeStampaEseguita);
+			}
+			//FINE CD PGNTACWS-15
+
+
 			//Dicembre 2020 - Controllo per inserimento idFlusso su enti diversi - TK: 2020121088000104 
 			Matcher matcher = Pattern.compile("[0-9]{5}_").matcher(fileNameToElab); 
 			String flagVariazione = fileNameToElab.substring(fileNameToElab.length()-3, fileNameToElab.length());
@@ -231,7 +244,10 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	    		if (progFlussoPerNomeAltraData > 0) 
 	    			throw new ValidazioneException("identificativo flusso " + fileNameToElab + " gi presente in archivio");
 			}
+
 			configurazione.setIdentificativoFlusso(fileNameToElab);
+
+
 			//********SPOSTATO DA RIGA 146 - fine******************//
 			
         	//Verifica input
@@ -362,7 +378,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						String dataNotifica = GenericsDateNumbers.formatData(documento.getDataNotifica(),"dd/MM/yyyy","yyyy-MM-dd"); 
 						if (dataNotifica.equals(""))
 							dataNotifica = "1900-01-01";	
-						if(configurazione.getFlagGenerazioneIUV().equals("Y")) {
+						if(configurazione.getFlagGenerazioneIUV().equals("Y") && !stampaEseguita) {
 							String[] codici = IuvUtils.calcolaIuv(in.getCodiceEnte(),configurazione.getConfigurazioneIUV(), connection, getSchemaDifferito(dbSchemaCodSocieta)); 
 							numeroBollettinoPagoPA = codici[0];
 							identificativoUnivocoVersamento = codici[1];
@@ -1288,7 +1304,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			    		//NOTA. Genero un nuovo identificativo flusso
 			    		//      in questo modo forzo la creazione di una nuova struttura flusso con il solo documento variato
 			    		if(bModalitaAgggiornamento || bStampaAvvisoEseguita) {
-			    			String newidflusso = getNewIdentificativoFlusso(in.getCodiceUtente());
+			    			//String newidflusso = getNewIdentificativoFlusso(in.getCodiceUtente());
+							String newidflusso = getNewIdentificativoFlusso(in.getCodiceUtente()) + "_s"; //cd PGNTACWS-15
 			    			in.getConfigurazione().setIdentificativoFlusso(newidflusso);
 				    		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - inserimento posizione debitoria variata su nuovo flusso: '" + newidflusso + "'");
 			    		} else
