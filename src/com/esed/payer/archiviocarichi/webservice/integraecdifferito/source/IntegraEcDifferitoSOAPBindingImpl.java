@@ -2765,7 +2765,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 		        tributo.setIdentificativoDominio(wrsTrib.getString(17));
 		        tributo.setIBANBancario(wrsTrib.getString(18));
 		        tributo.setIBANPostale(wrsTrib.getString(19));
-		        
+
+				tributo.setCodiceTipologiaServizio(wrsTrib.getString(20));  //cd PGNTACWS-15
 		        //inizio SB PAGONET-537
 		        tributo.setMetadatiPagoPATariTefaKey(wrsTrib.getString(21));
 		        tributo.setMetadatiPagoPATariTefaValue(wrsTrib.getString(22));
