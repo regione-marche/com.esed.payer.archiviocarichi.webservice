@@ -431,7 +431,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							//ArchivioCarichiScadenza scadOut = archivioCarichiDao.getScadenza(scadIn);
 							String numeroBollettinoScadenzaPagoPA = "";
 							String identificativoUnivocoVersamentoScadenza = "";
-							if(configurazione.getFlagGenerazioneIUV().equals("Y")) {
+							if(configurazione.getFlagGenerazioneIUV().equals("Y") && !stampaEseguita) {
 								//Nel caso il bollettino sia monorata, numero avviso /iuv documento = numero avviso/iuv rata
 								if (in.getListScadenze().length==1) {
 									numeroBollettinoScadenzaPagoPA = numeroBollettinoPagoPA;
