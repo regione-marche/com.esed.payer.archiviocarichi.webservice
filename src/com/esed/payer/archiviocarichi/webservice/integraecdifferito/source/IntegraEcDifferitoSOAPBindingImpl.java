@@ -172,8 +172,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			}			
 			this.maxImport = Arrays.asList(listaImportiScadenze).stream().max(BigDecimal::compareTo).get();
 		}
-		// fine SR PGNTACWS-5 
-		
+		// fine SR PGNTACWS-5
+
 		CachedRowSet ecCached = null;
 		
 		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - inizio");
@@ -1179,6 +1179,14 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				}
 				Configurazione configurazioneDB = docInDB.getConfigurazione();
 				Configurazione configurazioneEx = in.getConfigurazione();
+				//INIZIO CD PGNTACWS-15
+				String flagStampaAvvisoNelDb = configurazioneDB.getFlagStampaAvviso(); // arriva N o Y corrisponde al valore del campo EH0_FEH0FSTA nella EH0
+				System.out.println("FLAG STAMPA AVVISO DB: "+flagStampaAvvisoNelDb);
+				if (flagStampaAvvisoNelDb.equals("Y")){
+					in.getConfigurazione().setFlagStampaAvviso(flagStampaAvvisoNelDb);
+				}
+				//FINE CD PGNTACWS-15
+
 				if(configurazioneEx.getFlagGenerazioneIUV().length() == 0) {
 					configurazioneEx.setFlagGenerazioneIUV("N");
 				}
