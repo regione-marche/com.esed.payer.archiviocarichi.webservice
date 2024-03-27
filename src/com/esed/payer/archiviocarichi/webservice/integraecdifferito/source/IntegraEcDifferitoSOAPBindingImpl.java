@@ -172,8 +172,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			}			
 			this.maxImport = Arrays.asList(listaImportiScadenze).stream().max(BigDecimal::compareTo).get();
 		}
-		// fine SR PGNTACWS-5 
-		
+		// fine SR PGNTACWS-5
+
 		CachedRowSet ecCached = null;
 		
 		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - inizio");
@@ -212,6 +212,19 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			String dataFlusso = GenericsDateNumbers.calendarToString(calCurrentDate, "yyyy-MM-dd");		//data flusso nel formato AAAA-MM-GG
 			String fileNameToElab =  configurazione.getIdentificativoFlusso();
 			System.out.println("Nome Flusso:" + fileNameToElab);
+
+			//INIZIO CD PGNTACWS-15
+			boolean stampaEseguita = false;
+			String flagStampaEseg = fileNameToElab.substring(fileNameToElab.length()-2, fileNameToElab.length());
+			String fileNameToElabSeStampaEseguita = "";
+			if(flagStampaEseg.equals("_s")) {
+				stampaEseguita = true;
+				fileNameToElabSeStampaEseguita = configurazione.getIdentificativoFlusso().substring(0,fileNameToElab.length()-2);  //ripristino senza s
+				configurazione.setIdentificativoFlusso(fileNameToElabSeStampaEseguita);
+			}
+			//FINE CD PGNTACWS-15
+
+
 			//Dicembre 2020 - Controllo per inserimento idFlusso su enti diversi - TK: 2020121088000104 
 			Matcher matcher = Pattern.compile("[0-9]{5}_").matcher(fileNameToElab); 
 			String flagVariazione = fileNameToElab.substring(fileNameToElab.length()-3, fileNameToElab.length());
@@ -231,7 +244,10 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	    		if (progFlussoPerNomeAltraData > 0) 
 	    			throw new ValidazioneException("identificativo flusso " + fileNameToElab + " gi presente in archivio");
 			}
+
 			configurazione.setIdentificativoFlusso(fileNameToElab);
+
+
 			//********SPOSTATO DA RIGA 146 - fine******************//
 			
         	//Verifica input
@@ -362,7 +378,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						String dataNotifica = GenericsDateNumbers.formatData(documento.getDataNotifica(),"dd/MM/yyyy","yyyy-MM-dd"); 
 						if (dataNotifica.equals(""))
 							dataNotifica = "1900-01-01";	
-						if(configurazione.getFlagGenerazioneIUV().equals("Y")) {
+						if(configurazione.getFlagGenerazioneIUV().equals("Y") && !stampaEseguita) {
 							String[] codici = IuvUtils.calcolaIuv(in.getCodiceEnte(),configurazione.getConfigurazioneIUV(), connection, getSchemaDifferito(dbSchemaCodSocieta)); 
 							numeroBollettinoPagoPA = codici[0];
 							identificativoUnivocoVersamento = codici[1];
@@ -415,7 +431,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							//ArchivioCarichiScadenza scadOut = archivioCarichiDao.getScadenza(scadIn);
 							String numeroBollettinoScadenzaPagoPA = "";
 							String identificativoUnivocoVersamentoScadenza = "";
-							if(configurazione.getFlagGenerazioneIUV().equals("Y")) {
+							if(configurazione.getFlagGenerazioneIUV().equals("Y") && !stampaEseguita) {
 								//Nel caso il bollettino sia monorata, numero avviso /iuv documento = numero avviso/iuv rata
 								if (in.getListScadenze().length==1) {
 									numeroBollettinoScadenzaPagoPA = numeroBollettinoPagoPA;
@@ -1163,6 +1179,14 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				}
 				Configurazione configurazioneDB = docInDB.getConfigurazione();
 				Configurazione configurazioneEx = in.getConfigurazione();
+				//INIZIO CD PGNTACWS-15
+				String flagStampaAvvisoNelDb = configurazioneDB.getFlagStampaAvviso(); // arriva N o Y corrisponde al valore del campo EH0_FEH0FSTA nella EH0
+				System.out.println("FLAG STAMPA AVVISO DB: "+flagStampaAvvisoNelDb);
+				if (flagStampaAvvisoNelDb.equals("Y")){
+					in.getConfigurazione().setFlagStampaAvviso(flagStampaAvvisoNelDb);
+				}
+				//FINE CD PGNTACWS-15
+
 				if(configurazioneEx.getFlagGenerazioneIUV().length() == 0) {
 					configurazioneEx.setFlagGenerazioneIUV("N");
 				}
@@ -1288,7 +1312,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			    		//NOTA. Genero un nuovo identificativo flusso
 			    		//      in questo modo forzo la creazione di una nuova struttura flusso con il solo documento variato
 			    		if(bModalitaAgggiornamento || bStampaAvvisoEseguita) {
-			    			String newidflusso = getNewIdentificativoFlusso(in.getCodiceUtente());
+			    			//String newidflusso = getNewIdentificativoFlusso(in.getCodiceUtente());
+							String newidflusso = getNewIdentificativoFlusso(in.getCodiceUtente()) + "_s"; //cd PGNTACWS-15
 			    			in.getConfigurazione().setIdentificativoFlusso(newidflusso);
 				    		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - variazioneEC - inserimento posizione debitoria variata su nuovo flusso: '" + newidflusso + "'");
 			    		} else
@@ -2748,7 +2773,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 		        tributo.setIdentificativoDominio(wrsTrib.getString(17));
 		        tributo.setIBANBancario(wrsTrib.getString(18));
 		        tributo.setIBANPostale(wrsTrib.getString(19));
-		        
+
+				tributo.setCodiceTipologiaServizio(wrsTrib.getString(20));  //cd PGNTACWS-15
 		        //inizio SB PAGONET-537
 		        tributo.setMetadatiPagoPATariTefaKey(wrsTrib.getString(21));
 		        tributo.setMetadatiPagoPATariTefaValue(wrsTrib.getString(22));
