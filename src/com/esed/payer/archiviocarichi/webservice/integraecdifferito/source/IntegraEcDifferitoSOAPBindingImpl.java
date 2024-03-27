@@ -172,8 +172,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			}			
 			this.maxImport = Arrays.asList(listaImportiScadenze).stream().max(BigDecimal::compareTo).get();
 		}
-		// fine SR PGNTACWS-5 
-		
+		// fine SR PGNTACWS-5
+
 		CachedRowSet ecCached = null;
 		
 		logger.debug("com.esed.payer.archiviocarichi.webservice.integraecdifferito - inserimentoEC - inizio");
@@ -431,7 +431,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							//ArchivioCarichiScadenza scadOut = archivioCarichiDao.getScadenza(scadIn);
 							String numeroBollettinoScadenzaPagoPA = "";
 							String identificativoUnivocoVersamentoScadenza = "";
-							if(configurazione.getFlagGenerazioneIUV().equals("Y")) {
+							if(configurazione.getFlagGenerazioneIUV().equals("Y") && !stampaEseguita) {
 								//Nel caso il bollettino sia monorata, numero avviso /iuv documento = numero avviso/iuv rata
 								if (in.getListScadenze().length==1) {
 									numeroBollettinoScadenzaPagoPA = numeroBollettinoPagoPA;
@@ -1179,6 +1179,14 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				}
 				Configurazione configurazioneDB = docInDB.getConfigurazione();
 				Configurazione configurazioneEx = in.getConfigurazione();
+				//INIZIO CD PGNTACWS-15
+				String flagStampaAvvisoNelDb = configurazioneDB.getFlagStampaAvviso(); // arriva N o Y corrisponde al valore del campo EH0_FEH0FSTA nella EH0
+				System.out.println("FLAG STAMPA AVVISO DB: "+flagStampaAvvisoNelDb);
+				if (flagStampaAvvisoNelDb.equals("Y")){
+					in.getConfigurazione().setFlagStampaAvviso(flagStampaAvvisoNelDb);
+				}
+				//FINE CD PGNTACWS-15
+
 				if(configurazioneEx.getFlagGenerazioneIUV().length() == 0) {
 					configurazioneEx.setFlagGenerazioneIUV("N");
 				}
@@ -2765,7 +2773,8 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 		        tributo.setIdentificativoDominio(wrsTrib.getString(17));
 		        tributo.setIBANBancario(wrsTrib.getString(18));
 		        tributo.setIBANPostale(wrsTrib.getString(19));
-		        
+
+				tributo.setCodiceTipologiaServizio(wrsTrib.getString(20));  //cd PGNTACWS-15
 		        //inizio SB PAGONET-537
 		        tributo.setMetadatiPagoPATariTefaKey(wrsTrib.getString(21));
 		        tributo.setMetadatiPagoPATariTefaValue(wrsTrib.getString(22));
