@@ -33,6 +33,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.sql.DataSource;
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.WebRowSet;
 import javax.ws.rs.client.Client;
@@ -43,6 +44,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.JAXB;
 
+import com.seda.j2ee5.maf.components.servicelocator.ServiceLocator;
+import com.seda.j2ee5.maf.components.servicelocator.ServiceLocatorException;
+import com.seda.j2ee5.maf.core.action.ActionException;
 import org.apache.axis.utils.ByteArrayOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.threeten.bp.OffsetDateTime;
@@ -3055,7 +3059,11 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 				int idxLoc = -1;
 				if(!idDominio.equals(idDominioTestata))
 					idxLoc = idxCanalePagamentoEntePrincipale;
-				idxLoc = checkFunEntiCode(lstFunEnti, codiceUtente, codiceEnte, idDominio,  documento.getNumeroDocumento(), tributo.getCodiceTipologiaServizio(), iTrib, idxLoc);
+				//Su RM Enti multipli per stesso idDominio - verificare per altri utenti
+				if(codiceUtente.equals("000RM"))
+					idxLoc = recuperaListaFunzioniEnteIdDominio(lstFunEnti, idDominio,  documento.getNumeroDocumento(), tributo.getCodiceTipologiaServizio(), iTrib, idxLoc);
+				else
+					idxLoc = checkFunEntiCode(lstFunEnti, codiceUtente, codiceEnte, idDominio,  documento.getNumeroDocumento(), tributo.getCodiceTipologiaServizio(), iTrib, idxLoc);
 				if(idDominio.equals(idDominioTestata))
 					idxCanalePagamentoEntePrincipale = idxLoc;
 	    		//fine LP PG22XX05
@@ -3174,6 +3182,55 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			} else
 				lista.add(coppia);
 		} 
+		return idxTrovato;
+	}
+
+
+	public int recuperaListaFunzioniEnteIdDominio(List<String> lista, String idDominio, String documento, String codiceTipologiaServizio, int iTrib, int idxEntePrincipale) throws ValidazioneException {
+
+		com.seda.payer.core.bean.ConfigPagamento configPagamento = null;
+		int idxTrovato = -1;
+		boolean bTrovato = false;
+		String coppia = idDominio + "_" + codiceTipologiaServizio;
+		//System.out.println("coppia: " + coppia);
+
+			if (!lista.contains(coppia)) {
+
+				try {
+
+				System.out.println("idDominio: " + idDominio);
+				System.out.println("tipologiaServizio: " + codiceTipologiaServizio);
+				String[] canalePagamento = {"WEB", "MOB", "PSP"};
+				//System.out.println("idxEntePrincipale: " + idxEntePrincipale);
+				for (int ik = 0; ik < 3; ik++) {
+					if (idxEntePrincipale == -1 || idxEntePrincipale == ik) {
+						configPagamento = configPagamentoDao.doDetailIdDominio(idDominio, canalePagamento[ik], codiceTipologiaServizio);
+						if (configPagamento != null) {
+							System.out.println("configPagamento.getCodTipologiaServizio(): " + configPagamento.getCodTipologiaServizio());
+							if (configPagamento.getCodTipologiaServizio().equals(codiceTipologiaServizio)) {
+								bTrovato = true;
+								idxTrovato = ik;
+								break;
+							}
+						}
+					}
+				}
+
+
+			} catch(Exception e){
+				e.printStackTrace();
+				String mess = "documento " + documento + " in checkFunEntiCode errore: " + e.getMessage();
+				logger.debug(mess);
+				throw new ValidazioneException(mess);
+			}
+			//System.out.println("bTrovato: " + bTrovato);
+			if (!bTrovato) {
+				String mess = "documento " + documento + " il tributo #" + iTrib + " ha un valore codice tipologia servizio " + codiceTipologiaServizio + " per il quale non e' presente la configurazione per l'ente";
+				logger.debug(mess);
+				throw new ValidazioneException(mess);
+			} else
+				lista.add(coppia);
+		}
 		return idxTrovato;
 	}
 	

@@ -9,45 +9,57 @@
         </Console>
         <RollingFile name="com-esed-payer-archiviocarichi-ws"
                 	  fileName="${sys:jboss.server.log.dir}/com-esed-payer-archiviocarichi-ws.log"
-                	  filePattern="%d{yyyy-MM-dd}-com-esed-payer-archiviocarichi-webservice-ws.%i.log.gz"
+                	  filePattern="${sys:jboss.server.log.dir}/%d{yyyy-MM-dd}-com-esed-payer-archiviocarichi-webservice-ws.%i.log.gz"
                 	  ignoreExceptions="false" filePermissions="rw-rw-r--">
             <PatternLayout pattern="${LOG_PATTERN}"/>
 			<!-- <JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/> -->
             <Policies>
-                <SizeBasedTriggeringPolicy size="500MB" />
+                <SizeBasedTriggeringPolicy size="60MB" />
             </Policies>
             <!-- <DefaultRolloverStrategy max="10" /> -->
             <ThresholdFilter level="INFO"/>
         </RollingFile>
         <RollingFile name="com-esed-payer-archiviocarichi-ws-error"
                 	 fileName="${sys:jboss.server.log.dir}/com-esed-payer-archiviocarichi-ws-error.log"
-                	 filePattern="com-esed-payer-archiviocarichi-ws-error.%i.log"
+                	 filePattern="${sys:jboss.server.log.dir}/com-esed-payer-archiviocarichi-ws-error.%i.log"
                      ignoreExceptions="false" filePermissions="rw-rw-r--">
 			<JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/>
             <Policies>
-                <SizeBasedTriggeringPolicy size="200MB" />
+                <SizeBasedTriggeringPolicy size="60MB" />
             </Policies>
             <ThresholdFilter level="ERROR"/>
         </RollingFile>
-        <RollingFile name="com-esed-payer-archiviocarichi-ws-debug"
-                	 fileName="${sys:jboss.server.log.dir}/com-esed-payer-archiviocarichi-ws-debug.log"
-                	 filePattern="com-esed-payer-archiviocarichi-ws-debug.%i.log"
-                     ignoreExceptions="false" filePermissions="rw-rw-r--">
-			<JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/>
-            <Policies>
-                <SizeBasedTriggeringPolicy size="500MB" />
-            </Policies>
-            <ThresholdFilter level="DEBUG"/>
-            <!-- <DefaultRolloverStrategy max="10" /> -->
-        </RollingFile>
+<!--        <RollingFile name="com-esed-payer-archiviocarichi-ws-debug"-->
+<!--                	 fileName="${sys:jboss.server.log.dir}/com-esed-payer-archiviocarichi-ws-debug.log"-->
+<!--                	 filePattern="${sys:jboss.server.log.dir}/com-esed-payer-archiviocarichi-ws-debug.%i.log"-->
+<!--                     ignoreExceptions="false" filePermissions="rw-rw-r&#45;&#45;">-->
+<!--			<JsonTemplateLayout eventTemplateUri="classpath:ElasticsearchJsonEventLayoutV1.json"/>-->
+<!--            <Policies>-->
+<!--                <SizeBasedTriggeringPolicy size="60MB" />-->
+<!--            </Policies>-->
+<!--            <ThresholdFilter level="DEBUG"/>-->
+<!--            &lt;!&ndash; <DefaultRolloverStrategy max="10" /> &ndash;&gt;-->
+<!--        </RollingFile>-->
 
     </Appenders>
     <Loggers>         
-		<Logger name="com.esed.payer.archiviocarichi.webservice" level="DEBUG" additivity="false">
-			<AppenderRef ref="com-esed-payer-archiviocarichi-ws" />
-			<AppenderRef ref="com-esed-payer-archiviocarichi-ws-debug"/>
-            <AppenderRef ref="com-esed-payer-archiviocarichi-ws-error" />
-		</Logger>         
+<!--		<Logger name="com.esed.payer.archiviocarichi.webservice" level="DEBUG" additivity="false">-->
+<!--			<AppenderRef ref="com-esed-payer-archiviocarichi-ws" />-->
+<!--			<AppenderRef ref="com-esed-payer-archiviocarichi-ws-debug"/>-->
+<!--            <AppenderRef ref="com-esed-payer-archiviocarichi-ws-error" />-->
+<!--		</Logger>         -->
+        <Logger name="com.esed.payer.archiviocarichi.webservice" level="DEBUG" additivity="false">
+            <AppenderRef ref="com-seda-payer-archiviocarichi-webservice-ws" />
+            <AppenderRef ref="com-seda-payer-archiviocarichi-webservice-ws-error" />
+        </Logger>
+        <Logger name="com.seda.commons.logger" level="DEBUG" additivity="false">
+            <AppenderRef ref="com-seda-payer-archiviocarichi-webservice-ws" />
+            <AppenderRef ref="com-seda-payer-archiviocarichi-webservice-ws-error" />
+        </Logger>
+        <Logger name="com.seda.payer.core" level="DEBUG" additivity="false">
+            <AppenderRef ref="com-seda-payer-archiviocarichi-webservice-ws" />
+            <AppenderRef ref="com-seda-payer-archiviocarichi-webservice-ws-error" />
+        </Logger>
         <Root level="INFO" >
             <AppenderRef ref="STDOUT" />
         </Root>
