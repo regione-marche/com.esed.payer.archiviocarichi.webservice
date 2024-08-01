@@ -231,7 +231,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 
 			//Dicembre 2020 - Controllo per inserimento idFlusso su enti diversi - TK: 2020121088000104 
 			Matcher matcher = Pattern.compile("[0-9]{5}_").matcher(fileNameToElab); 
-			String flagVariazione = fileNameToElab.substring(fileNameToElab.length()-3, fileNameToElab.length());
+			String flagVariazione = fileNameToElab.substring(fileNameToElab.length()-2, fileNameToElab.length());
 			//Controllo se sono in variazione
 			//
 			if(flagVariazione.equals("_v")) {
