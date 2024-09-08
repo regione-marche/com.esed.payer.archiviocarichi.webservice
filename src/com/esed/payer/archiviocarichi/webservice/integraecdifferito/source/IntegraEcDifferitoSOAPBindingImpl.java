@@ -19,7 +19,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -74,6 +73,7 @@ import com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.Variazi
 import com.esed.payer.archiviocarichi.webservice.integraecdifferito.dati.VariazioneEcResponse;
 import com.esed.payer.archiviocarichi.webservice.model.CaricaDebitiJppa;
 import com.esed.payer.archiviocarichi.webservice.model.InviaDovutiDao;
+import com.esed.payer.archiviocarichi.webservice.model.RichiestaAvvisiDao;
 import com.esed.payer.archiviocarichi.webservice.util.GenericsDateNumbers;
 import com.esed.payer.archiviocarichi.webservice.util.IuvUtils;
 import com.esed.payer.archiviocarichi.webservice.util.VerificaCodiceFiscale;
@@ -82,7 +82,6 @@ import com.esed.payer.archiviocarichi.webservice.util.geos.GeosUtil;
 import com.lowagie.text.pdf.PdfReader;
 import com.lowagie.text.pdf.PdfStamper;
 import com.seda.commons.string.Convert;
-import com.seda.data.helper.Helper;
 import com.seda.payer.commons.geos.Bollettino;
 import com.seda.payer.commons.geos.DatiAnagrafici;
 import com.seda.payer.commons.geos.DatiCreditore;
@@ -1768,23 +1767,27 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 	        	 generatorePdf = propertiesTree().getProperty(PropKeys.generatorePdf.format(in.getCodiceUtente()));
     		
     		GeosUtil.setConfiguration();
-			callableStatement=Helper.prepareCall(connection, schema, "PY512SP_AVVI_WS");
-			callableStatement.setString(1,dbSchemaCodSocieta);
-			callableStatement.setString(2,in.getCodiceEnte());
-			callableStatement.setString(3,in.getStampaDocumento().getNumeroDocumento());
-			callableStatement.setString(4,in.getStampaDocumento().getCodiceFiscale());
-			//inizio LP PG200360
-			//callableStatement.registerOutParameter(5, Types.INTEGER); // CODICE ERR
-			//callableStatement.registerOutParameter(6, Types.VARCHAR); // MESS ERR
-			if (in.getStampaDocumento().getFlagDatiAttualizzati() != null && in.getStampaDocumento().getFlagDatiAttualizzati().equals("Y")) {
-				callableStatement.setString(5,"Y");
-			} else {
-				callableStatement.setString(5,"N");
-			}
-			callableStatement.setString(6,in.getImpostaServizio());
-			callableStatement.registerOutParameter(7, Types.INTEGER); // CODICE ERR
-			callableStatement.registerOutParameter(8, Types.VARCHAR); // MESS ERR
-			//fine LP PG200360
+    		//inizio LP 20240907 - PGNTACWS-22
+    		//callableStatement=Helper.prepareCall(connection, schema, "PY512SP_AVVI_WS");
+    		//callableStatement.setString(1,dbSchemaCodSocieta);
+    		//callableStatement.setString(2,in.getCodiceEnte());
+    		//callableStatement.setString(3,in.getStampaDocumento().getNumeroDocumento());
+    		//callableStatement.setString(4,in.getStampaDocumento().getCodiceFiscale());
+    		//			//inizio LP PG200360
+    		//			//callableStatement.registerOutParameter(5, Types.INTEGER); // CODICE ERR
+    		//			//callableStatement.registerOutParameter(6, Types.VARCHAR); // MESS ERR
+    		//if (in.getStampaDocumento().getFlagDatiAttualizzati() != null && in.getStampaDocumento().getFlagDatiAttualizzati().equals("Y")) {
+    		//				callableStatement.setString(5,"Y");
+    		//} else {
+    		//				callableStatement.setString(5,"N");
+    		//}
+    		//callableStatement.setString(6,in.getImpostaServizio());
+    		//callableStatement.registerOutParameter(7, Types.INTEGER); // CODICE ERR
+    		//callableStatement.registerOutParameter(8, Types.VARCHAR); // MESS ERR
+    		////fine LP PG200360
+    		RichiestaAvvisiDao richiestaAvvisiDao = new RichiestaAvvisiDao(connection, schema);
+    		//fine LP 20240907 - PGNTACWS-22
+    		callableStatement = richiestaAvvisiDao.prepareCall512AVVIWS(dbSchemaCodSocieta, in);
 			callableStatement.execute();
 			//inizio LP PG200360
 			//logger.debug("richiestaAvvisoPagoPa - PY512SP_AVVI_WS - returnCode: " + callableStatement.getInt(5));

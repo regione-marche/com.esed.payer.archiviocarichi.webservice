@@ -8,7 +8,6 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.seda.data.helper.Helper;
 import com.seda.data.helper.HelperException;
 import com.seda.payer.core.bean.ArchivioCarichiDocumento;
 import com.seda.payer.core.exception.DaoException;
@@ -16,8 +15,10 @@ import com.seda.payer.core.handler.BaseDaoHandler;
 
 public class InviaDovutiDao extends BaseDaoHandler {
 
-	private Connection connection;
-	private String schema = null;
+	//inizio LP 20240907 - PGNTACWS-22
+	//private Connection connection;
+	//private String schema = null;
+	//fine LP 20240907 - PGNTACWS-22
 
 	protected CallableStatement callableStatementGetCodiceIpa = null;
 	protected CallableStatement callableStatementFlagDovutoInviato = null;
