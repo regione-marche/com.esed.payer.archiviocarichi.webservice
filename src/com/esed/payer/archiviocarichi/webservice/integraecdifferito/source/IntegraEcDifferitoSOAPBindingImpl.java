@@ -782,10 +782,9 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						//      Adesso che nell'operazione di cancellazione si aggiorna nel record
 						//      di coda il numero record lo si pu fare.
 						//fine LP PG200360
-						codaOut.setNumeroRecordFlusso(codaOut.getNumeroRecordFlusso()+numeroRecord);	//TODO da verificare
+						codaOut.setNumeroRecordFlusso(codaOut.getNumeroRecordFlusso()+numeroRecord); //Da verificare
 						archivioCarichiDao.updateCoda(codaOut);
 					}
-					
 					flagSuccessfullExecution = true;
 	        		//inizio LP PG200070
 					//facade.saveLogFlussi(progressivoFlusso, null, null, -1, null, null, null, null, new Timestamp(System.currentTimeMillis()), "N", null, dbSchemaCodSocieta);
@@ -1532,7 +1531,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
     		ArchivioCarichiDocumento docIn = prepareArchivioCarichiDocumento(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), in.getDocumento().getNumeroDocumento());
     		//inizio LP 20240828 - PGNTACWS-22
     		//ArchivioCarichiDocumento docOut = archivioCarichiDao.getDocumento(docIn);
-			ArchivioCarichiDocumento docOut = archivioCarichiDao.getDocumentoTail(false, docIn);
+			ArchivioCarichiDocumento docOut = archivioCarichiDao.getDocumentoBatch(false, true, docIn); //LP 20241001 - PGNTACWS-22 
     		//fine LP 20240828 - PGNTACWS-22
 			if (docOut.getProgressivoFlusso() == null) {
 				//inizio LP PG22XX05
@@ -1557,7 +1556,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 						ArchivioCarichiTributo tribIn = prepareArchivioCarichiTributo(in.getCodiceUtente(), in.getTipoServizio(), in.getCodiceEnte(), in.getTipoUfficio(), in.getCodiceUfficio(), in.getImpostaServizio(), documento.getNumeroDocumento(), tributo.getCodiceTributo(), tributo.getAnnoTributo(), tributo.getProgressivoTributo());
 			    		//inizio LP 20240828 - PGNTACWS-22
 						//ArchivioCarichiTributo tribOut = archivioCarichiDao.getTributo(tribIn);
-						ArchivioCarichiTributo tribOut = archivioCarichiDao.getTributoTail(false, tribIn);
+						ArchivioCarichiTributo tribOut = archivioCarichiDao.getTributoBatch(false, true, tribIn); //LP 20241001 - PGNTACWS-22
 			    		//fine LP 20240828 - PGNTACWS-22
 						if (tribOut.getProgressivoFlusso() == null) {
 							//inizio LP PG22XX05
@@ -1604,7 +1603,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							//Selezione max progressivo movimento a parita' di documento a partire da 1
 				    		//inizio LP 20240828 - PGNTACWS-22
 							//int progPagamento = archivioCarichiDao.getProgressivoPagamento(docIn);
-							int progPagamento = archivioCarichiDao.getProgressivoPagamentoTail(false, docIn);
+							int progPagamento = archivioCarichiDao.getProgressivoPagamentoBatch(false, true, docIn); //LP 20241001 - PGNTACWS-22
 				    		//fine LP 20240828 - PGNTACWS-22
 							   
 				    		//inizio LP 20240828 - PGNTACWS-22
@@ -1622,7 +1621,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							//		"C", 	//canalePagamento (A=Assegno di traenza, B=Bonifico, C=Cassa/Sportello, H=Sisal, L=Lottomatica, I=Internet, P=Poste, R=Rid/Sepa)
 							//		"", 
 							//		"C");
-							elaborazioneFlussiDao.doInsertEH3Tail(false,
+							elaborazioneFlussiDao.doInsertEH3Batch(false, true, //LP 20241001 - PGNTACWS-22
 									tribOut.getProgressivoFlusso().intValue(), "EH3", tribOut.getCodiceUtente(), (java.sql.Date)tribOut.getDataCreazioneFlusso(), tribOut.getTipoServizio(), tribOut.getCodiceEnte(), tribOut.getTipoUfficio(), tribOut.getCodiceUfficio(), 
 									tribOut.getImpostaServizio(), tribOut.getNumeroDocumento(), 
 									progPagamento, //int da max 4 caratteri (progressivo pagamento all'interno del documento che fa parte della chiave)
@@ -1643,7 +1642,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 							tribOut.setImpPagatoCompresiSgravi(impEuroTributoDaDiscaricare);
 				    		//inizio LP 20240828 - PGNTACWS-22
 							//archivioCarichiDao.applicaDiscarico(tribOut);
-							archivioCarichiDao.applicaDiscaricoTail(false, tribOut);
+							archivioCarichiDao.applicaDiscaricoBatch(false, true, tribOut); //LP 20241001 - PGNTACWS-22
 				    		//fine LP 20240828 - PGNTACWS-22
 						}
 					}
@@ -1804,11 +1803,9 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			//PG22XX01_GG1 - fine
 			logger.debug("richiestaAvvisoPagoPa - PY512SP_AVVI_WS - returnCode: " + retCodeSp);
 			//fine LP PG200360
-			if (retCodeSp==0){ //MAI STAMPATO ... CREA XML
+			if (retCodeSp == 0) { //MAI STAMPATO ... CREA XML
 				logger.debug("richiestaAvvisoPagoPa - Non esiste PDF nella basedati");
-				
 				resultSet= callableStatement.getResultSet();
-
 				if (resultSet != null && resultSet.next()) {
 					flagDocumentoDisponibile = true;
 					Long impTotaleDocumentoIn = Long.valueOf(in.getStampaDocumento().getImportoTotaleDocumento());
@@ -1816,172 +1813,166 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 					logger.debug("richiestaAvvisoPagoPa - impTotaleDocumentoIn = " + impTotaleDocumentoIn);
 					logger.debug("richiestaAvvisoPagoPa - impTotaleDocumentoDb = " + impTotaleDocumentoDb);
 					
-					if (impTotaleDocumentoIn.compareTo(impTotaleDocumentoDb)!=0)
+					if (impTotaleDocumentoIn.compareTo(impTotaleDocumentoDb) != 0) {
 						throw new ValidazioneException("Importo totale del documento non congruente");
+					}
 					logger.debug("richiestaAvvisoPagoPa - Elaborazione resultset");
 					// primo avviso con tutte le colonne Debitore/Docum/Avviso
-					     targetPdfPath = resultSet.getString("FLU_FOLDER");
-				         curFlusso = GeosUtil.extractFlusso(resultSet,dbSchemaCodSocieta);
-						 //inizio LP - mail Giorgia 20200608
-				         //com.esed.payer.archiviocarichi.webservice.util.geos.Documento curDoc = GeosUtil.extractDoc(resultSet);
-				         com.seda.payer.commons.geos.Documento curDoc = GeosUtil.extractDoc(resultSet);
-						 //fine LP - mail Giorgia 20200608
-				         
-				         DatiAnagrafici curAna = GeosUtil.extractAna(resultSet);
-				         
-				         
-				         // inizio PAGONET-368
-				         //DatiCreditore curCre = GeosUtil.extractCre(resultSet);
-				         DatiCreditore curCre = GeosUtil.extractCre(resultSet,dbSchemaCodSocieta);
-				         // fine PAGONET-368
-
-						 //inizio LP - mail Giorgia 20200608
-				         //com.esed.payer.archiviocarichi.webservice.util.geos.Tributo curTri = GeosUtil.extractTrib(resultSet);
-				         com.seda.payer.commons.geos.Tributo curTri = GeosUtil.extractTrib(resultSet);
-						 //fine LP - mail Giorgia 20200608
-
-				         Bollettino curBol = GeosUtil.extractBoll(resultSet,dbSchemaCodSocieta);
-				         Bollettino curUltimoBol = GeosUtil.extractBollUltimo(resultSet,dbSchemaCodSocieta); 
-
-				         curFlusso.addDocumento(curDoc);
-				         curDoc.addDatiAnagrafici(curAna);
-				         curDoc.addDatiCreditore(curCre);
-			        	 curDoc.addElencoTributi(curTri);
-		        		 curDoc.addDatiBollettino(curBol);
-				         listaFlussi.add(curFlusso);
-
-				         // scansione dei flussi da DB in un unico Resultset... ci sono tutte le colonne
-				         while (resultSet.next()) {
-				           // riga del resultset...
-				        	 curTri = GeosUtil.extractTrib(resultSet);
-				        	 curDoc.addElencoTributi(curTri);
-				        	 if (!(GeosUtil.sameFlusso(resultSet, curFlusso) && GeosUtil.sameBoll(resultSet, curBol))) {
-				        		 curBol = GeosUtil.extractBoll(resultSet,dbSchemaCodSocieta);
-				        		 curDoc.addDatiBollettino(curBol);
-				        	 }
-				         }
-				         
-				         
-				         //PG22XX03_SB2 - inizio
-					        if(generatorePdf.equals("WSPDF")) {
-					        	for(Bollettino bol : curDoc.DatiBollettino) {
-					        		bol.AvvisoPagoPa = formattaCodiceAvviso(bol.AvvisoPagoPa);
-					        	}
-					        	curUltimoBol.AvvisoPagoPa=formattaCodiceAvviso(curUltimoBol.AvvisoPagoPa);
-					        }
-					      //PG22XX03_SB2 - fine
+				    targetPdfPath = resultSet.getString("FLU_FOLDER");
+			        curFlusso = GeosUtil.extractFlusso(resultSet,dbSchemaCodSocieta);
+					//inizio LP - mail Giorgia 20200608
+			        //com.esed.payer.archiviocarichi.webservice.util.geos.Documento curDoc = GeosUtil.extractDoc(resultSet);
+			        com.seda.payer.commons.geos.Documento curDoc = GeosUtil.extractDoc(resultSet);
+					//fine LP - mail Giorgia 20200608
+			        DatiAnagrafici curAna = GeosUtil.extractAna(resultSet);
+			        // inizio PAGONET-368
+			        //DatiCreditore curCre = GeosUtil.extractCre(resultSet);
+			        DatiCreditore curCre = GeosUtil.extractCre(resultSet,dbSchemaCodSocieta);
+			        // fine PAGONET-368
+					//inizio LP - mail Giorgia 20200608
+			        //com.esed.payer.archiviocarichi.webservice.util.geos.Tributo curTri = GeosUtil.extractTrib(resultSet);
+			        com.seda.payer.commons.geos.Tributo curTri = GeosUtil.extractTrib(resultSet);
+					//fine LP - mail Giorgia 20200608
+			        Bollettino curBol = GeosUtil.extractBoll(resultSet,dbSchemaCodSocieta);
+			        Bollettino curUltimoBol = GeosUtil.extractBollUltimo(resultSet,dbSchemaCodSocieta); 
+			        curFlusso.addDocumento(curDoc);
+			        curDoc.addDatiAnagrafici(curAna);
+			        curDoc.addDatiCreditore(curCre);
+		        	curDoc.addElencoTributi(curTri);
+	        		curDoc.addDatiBollettino(curBol);
+			        listaFlussi.add(curFlusso);
+			        // scansione dei flussi da DB in un unico Resultset... ci sono tutte le colonne
+			        while (resultSet.next()) {
+						// riga del resultset...
+						curTri = GeosUtil.extractTrib(resultSet);
+						curDoc.addElencoTributi(curTri);
+						if (!(GeosUtil.sameFlusso(resultSet, curFlusso) && GeosUtil.sameBoll(resultSet, curBol))) {
+							curBol = GeosUtil.extractBoll(resultSet,dbSchemaCodSocieta);
+							curDoc.addDatiBollettino(curBol);
+						}
+			        }
+			        //PG22XX03_SB2 - inizio
+			        if(generatorePdf.equals("WSPDF")) {
+						for(Bollettino bol : curDoc.DatiBollettino) {
+							bol.AvvisoPagoPa = formattaCodiceAvviso(bol.AvvisoPagoPa);
+						}
+						curUltimoBol.AvvisoPagoPa=formattaCodiceAvviso(curUltimoBol.AvvisoPagoPa);
+				    }
+				    //PG22XX03_SB2 - fine
+			        //Devo aggiungere la rata 999
+			        curDoc.addDatiBollettino(curUltimoBol);	//Da verificare
+			        //String targetPdfNome=dbSchemaCodSocieta+"_"+in.getStampaDocumento().getNumeroDocumento()+"_"+System.currentTimeMillis()+".pdf"; 
+			        String targetPdfNome=dbSchemaCodSocieta+"_"+in.getStampaDocumento().getNumeroDocumento().replace("/", "-")+".pdf";
+			        targetPdfPath=targetPdfPath+File.separator+targetPdfNome;
+					switch (generatorePdf) {
+						case "GEOS":
+							logger.debug("richiestaAvvisoPagoPa - Interrogazione WS GEOS");
+							String urlWsGeos = propertiesTree().getProperty(PropKeys.urlWSRestGeos.format(in.getCodiceUtente()));
+							// inizio LP - mail Giorgia 20200608
+							// if
+							// (WSRest_GEOS.callWSRest_GEOS(curFlusso,targetPdfPath,dbSchemaCodSocieta,urlWsGeos)){
+							logger.debug("urlGeos da config: " + urlWsGeos);
+							if (urlWsGeos == null || urlWsGeos.trim().length() == 0) {
+								urlWsGeos = GeosUtil.getUrlRestGeos(dbSchemaCodSocieta);
+								logger.debug("urlGeos da getUrlRestGeos: " + urlWsGeos);
+							}
+							if (WSRest_GEOS.callWSRest_GEOS(curFlusso, targetPdfPath, urlWsGeos)) {
+								// fine LP - mail Giorgia 20200608
+								path = targetPdfPath;
+							} else {
+								logger.debug("richiestaAvvisoPagoPa - Errore chiamata WS GEOS");
+								throw new Exception("Impossibile eseguire la stampa dell'avviso");
+							}
+							break;
+						case "WSPDF":
+							logger.debug("richiestaAvvisoPagoPa - Interrogazione WSPDF");
+							String urlWsPdf = propertiesTree().getProperty(PropKeys.urlWSRestPdf.format(in.getCodiceUtente()));
+							if(in.getCodiceUtente().equals("000RM")
+									|| in.getCodiceUtente().equals("000LP")) {
+								urlWsPdf += "RegMarche";
+							}else if(in.getCodiceUtente().equals("000P6")) {
+								urlWsPdf += "Bolzano";
+							}
+							logger.debug("urlPdf da config: " + urlWsPdf);
+							if (urlWsPdf == null || urlWsPdf.trim().length() == 0) {
+								throw new Exception("Mancata configurazione url WSPDF");
+							}
 							
-				         
-				         //Devo aggiungere la rata 999
-				         curDoc.addDatiBollettino(curUltimoBol);	//Da verificare
-				         
-				         //String targetPdfNome=dbSchemaCodSocieta+"_"+in.getStampaDocumento().getNumeroDocumento()+"_"+System.currentTimeMillis()+".pdf"; 
-				         String targetPdfNome=dbSchemaCodSocieta+"_"+in.getStampaDocumento().getNumeroDocumento().replace("/", "-")+".pdf";
-				         targetPdfPath=targetPdfPath+File.separator+targetPdfNome;
-				         
-				         
-						switch (generatorePdf) {
-							case "GEOS":
-								logger.debug("richiestaAvvisoPagoPa - Interrogazione WS GEOS");
-								String urlWsGeos = propertiesTree().getProperty(PropKeys.urlWSRestGeos.format(in.getCodiceUtente()));
-								// inizio LP - mail Giorgia 20200608
-								// if
-								// (WSRest_GEOS.callWSRest_GEOS(curFlusso,targetPdfPath,dbSchemaCodSocieta,urlWsGeos)){
-								logger.debug("urlGeos da config: " + urlWsGeos);
-								if (urlWsGeos == null || urlWsGeos.trim().length() == 0) {
-									urlWsGeos = GeosUtil.getUrlRestGeos(dbSchemaCodSocieta);
-									logger.debug("urlGeos da getUrlRestGeos: " + urlWsGeos);
-								}
-								if (WSRest_GEOS.callWSRest_GEOS(curFlusso, targetPdfPath, urlWsGeos)) {
-									// fine LP - mail Giorgia 20200608
-									path = targetPdfPath;
+							Client client = ClientBuilder.newClient();
+							
+							try (Response res = client.target(urlWsPdf)
+									.request(MediaType.APPLICATION_JSON)
+									.post(Entity.entity(curFlusso, MediaType.APPLICATION_JSON))) {
+								
+								if (res.getStatus() == Status.OK.getStatusCode()) {
+									byte[] ba = res.readEntity(byte[].class);
+									File file = new File(targetPdfPath);
+									FileUtils.writeByteArrayToFile(file, ba);
 								} else {
-									logger.debug("richiestaAvvisoPagoPa - Errore chiamata WS GEOS");
+									logger.debug("richiestaAvvisoPagoPa - Errore chiamata WS PDF");
 									throw new Exception("Impossibile eseguire la stampa dell'avviso");
 								}
-								break;
-							case "WSPDF":
-								logger.debug("richiestaAvvisoPagoPa - Interrogazione WSPDF");
-								String urlWsPdf = propertiesTree().getProperty(PropKeys.urlWSRestPdf.format(in.getCodiceUtente()));
-								if(in.getCodiceUtente().equals("000RM")
-										|| in.getCodiceUtente().equals("000LP")) {
-									urlWsPdf += "RegMarche";
-								}else if(in.getCodiceUtente().equals("000P6")) {
-									urlWsPdf += "Bolzano";
-								}
-								logger.debug("urlPdf da config: " + urlWsPdf);
-								if (urlWsPdf == null || urlWsPdf.trim().length() == 0) {
-									throw new Exception("Mancata configurazione url WSPDF");
-								}
 								
-								Client client = ClientBuilder.newClient();
-								
-								try (Response res = client.target(urlWsPdf)
-										.request(MediaType.APPLICATION_JSON)
-										.post(Entity.entity(curFlusso, MediaType.APPLICATION_JSON))) {
-									
-									if (res.getStatus() == Status.OK.getStatusCode()) {
-										byte[] ba = res.readEntity(byte[].class);
-										File file = new File(targetPdfPath);
-										FileUtils.writeByteArrayToFile(file, ba);
-									} else {
-										logger.debug("richiestaAvvisoPagoPa - Errore chiamata WS PDF");
-										throw new Exception("Impossibile eseguire la stampa dell'avviso");
-									}
-									
-									path = targetPdfPath;
-								}
-								
-								client.close();
-								break;
-							default:
-								throw new Exception("Errata configurazione generatore PDF");
-						}
-					}
-				} else {	//retcode diverso da zero
-					if (retCodeSp==1) {
-						logger.debug("richiestaAvvisoPagoPa - Trovato PDF in base dati ottico interno");
-						// Il PDF esiste ed  stato creato precedentemente dalla fase batch
-						resultSet= callableStatement.getResultSet();
-						String pathFile = "";
-						String fileName ="";
-						String pagi = "";
-						String pagf = "";
-						if(resultSet.next()){
-							flagDocumentoDisponibile = true;
-							pathFile = resultSet.getString("CFO_CCFODIRO");
-							fileName = resultSet.getString("DOT_DDOTDIMM");
-							fileName = fileName.replace("_all_docs.pdf", "");
-							pagi = resultSet.getString("DOT_NDOTPAGI");
-							pagf = resultSet.getString("DOT_NDOTPAGF");
+								path = targetPdfPath;
+							}
 							
-						}
-						
-						PdfReader reader = new PdfReader(pathFile+File.separator+fileName+"_all_docs.pdf");
-						PdfStamper stamper;
-						String fileNameTemp = fileName+"_doc_"+in.getStampaDocumento().getNumeroDocumento().replace("/", "-")+".pdf";
-						reader.selectPages(String.valueOf(pagi)+"-"+String.valueOf(pagf));
-						ByteArrayOutputStream tempPdf = new ByteArrayOutputStream();
-						stamper = new PdfStamper(reader,tempPdf);
-						stamper.close();
-						reader.close();
-						
-						FileOutputStream fos = new FileOutputStream(pathFile+File.separator+fileNameTemp);
-						fos.write(tempPdf.toByteArray());
-						fos.close();
-						//inizio LP PG21XX04 Leak
-						tempPdf.close();
-						//fine LP PG21XX04 Leak
-
-						path = pathFile+File.separator+fileNameTemp;
-					} else {
-						throw new NotFoundException(retMessageSp);
+							client.close();
+							break;
+						default:
+							throw new Exception("Errata configurazione generatore PDF");
 					}
 				}
-			if (resultSet!=null) resultSet.close();
-			callableStatement.close();
+			} else {	//retcode diverso da zero
+				if (retCodeSp == 1) {
+					logger.debug("richiestaAvvisoPagoPa - Trovato PDF in base dati ottico interno");
+					// Il PDF esiste ed  stato creato precedentemente dalla fase batch
+					resultSet= callableStatement.getResultSet();
+					String pathFile = "";
+					String fileName ="";
+					String pagi = "";
+					String pagf = "";
+					if(resultSet.next()){
+						flagDocumentoDisponibile = true;
+						pathFile = resultSet.getString("CFO_CCFODIRO");
+						fileName = resultSet.getString("DOT_DDOTDIMM");
+						fileName = fileName.replace("_all_docs.pdf", "");
+						pagi = resultSet.getString("DOT_NDOTPAGI");
+						pagf = resultSet.getString("DOT_NDOTPAGF");
+						
+					}
+					PdfReader reader = new PdfReader(pathFile+File.separator+fileName+"_all_docs.pdf");
+					PdfStamper stamper;
+					String fileNameTemp = fileName+"_doc_"+in.getStampaDocumento().getNumeroDocumento().replace("/", "-")+".pdf";
+					reader.selectPages(String.valueOf(pagi)+"-"+String.valueOf(pagf));
+					ByteArrayOutputStream tempPdf = new ByteArrayOutputStream();
+					stamper = new PdfStamper(reader,tempPdf);
+					stamper.close();
+					reader.close();
+					FileOutputStream fos = new FileOutputStream(pathFile+File.separator+fileNameTemp);
+					fos.write(tempPdf.toByteArray());
+					fos.close();
+					//inizio LP PG21XX04 Leak
+					tempPdf.close();
+					//fine LP PG21XX04 Leak
+					path = pathFile+File.separator+fileNameTemp;
+				} else {
+					throw new NotFoundException(retMessageSp);
+				}
+			}
+			if (resultSet != null) {
+				resultSet.close();
+				//inizio LP 20241001 - PGNTACWS-22
+				resultSet = null;
+				//fine LP 20241001 - PGNTACWS-22
+			}
+			if(callableStatement != null) {
+				callableStatement.close();
+				//inizio LP 20241001 - PGNTACWS-22
+				callableStatement = null;
+				//fine LP 20241001 - PGNTACWS-22
+			}
 			if (flagDocumentoDisponibile) {
-				if (in.getStampaDocumento().getFlagDatiAttualizzati()!=null && in.getStampaDocumento().getFlagDatiAttualizzati().equals("Y")) {
+				if (in.getStampaDocumento().getFlagDatiAttualizzati() != null && in.getStampaDocumento().getFlagDatiAttualizzati().equals("Y")) {
 					response.getStampaDocumento().setPathStampaDocumento(path);
 				}
 				stampaPDFDocumentoPagoPA = readBytesFromFile(path);
@@ -2011,8 +2002,7 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 			logger.error("com.esed.payer.archiviocarichi.webservice.integraecdifferito - richiestaAvvisoPagoPa failed, generic error due to: ", e);
 			response.setCodiceEsito("01");
 			response.setMessaggioEsito("Errore generico");
-		}finally
-		{
+		} finally {
 			//inizio LP PG21XX04 Leak
             //DAOHelper.closeIgnoringException(resultSet);
 			//DAOHelper.closeIgnoringException(callableStatement);
@@ -2448,7 +2438,13 @@ public class IntegraEcDifferitoSOAPBindingImpl extends WebServiceHandler impleme
 		finally {
 	    	try {
 	    		if(conn != null) {
-	    			conn.close();
+					//inizio LP 20241001 - PGNTACWS-22
+	    			if(!conn.isClosed()) {
+					//fine LP 20241001 - PGNTACWS-22
+	    				conn.close();
+					//inizio LP 20241001 - PGNTACWS-22
+	    			}
+					//fine LP 20241001 - PGNTACWS-22
 	    		}
 	    	} catch (SQLException e) {
 	    		e.printStackTrace();
