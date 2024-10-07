@@ -8,7 +8,6 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.seda.data.helper.Helper;
 import com.seda.data.helper.HelperException;
 import com.seda.payer.core.bean.ArchivioCarichiDocumento;
 import com.seda.payer.core.exception.DaoException;
@@ -16,8 +15,10 @@ import com.seda.payer.core.handler.BaseDaoHandler;
 
 public class InviaDovutiDao extends BaseDaoHandler {
 
-	private Connection connection;
-	private String schema = null;
+	//inizio LP 20240907 - PGNTACWS-22
+	//private Connection connection;
+	//private String schema = null;
+	//fine LP 20240907 - PGNTACWS-22
 
 	protected CallableStatement callableStatementGetCodiceIpa = null;
 	protected CallableStatement callableStatementFlagDovutoInviato = null;
@@ -25,8 +26,9 @@ public class InviaDovutiDao extends BaseDaoHandler {
 
 	public InviaDovutiDao(Connection connection, String schema) {
 		super(connection, schema);
-		this.connection = connection;
-		this.schema = schema;
+		//inizio LP 20240828 - PGNTACWS-22
+		//this.connection = connection;
+		//this.schema = schema;
 	}
 
 	public String getCodiceIpa(String primoArg, String codiceEnte) throws Exception {
@@ -36,7 +38,10 @@ public class InviaDovutiDao extends BaseDaoHandler {
 		try {
 			if (primoArg.length() <= 5) {
 				// è un codice utente
-				callableStatementGetCodiceIpa = Helper.prepareCall(connection, schema, "PYENTSP_SEL_INFO_CIPA2");
+				//inizio LP 20240828 - PGNTACWS-22
+				//callableStatementGetCodiceIpa = Helper.prepareCall(connection, schema, "PYENTSP_SEL_INFO_CIPA2");
+				callableStatementGetCodiceIpa = prepareCall("PYENTSP_SEL_INFO_CIPA2");
+				//fine LP 20240828 - PGNTACWS-22
 				callableStatementGetCodiceIpa.setString(1, primoArg); // ENT_CUTECUTE (cute cute)
 				callableStatementGetCodiceIpa.setString(2, codiceEnte); // ANE_CANECENT
 				callableStatementGetCodiceIpa.execute();
@@ -46,7 +51,10 @@ public class InviaDovutiDao extends BaseDaoHandler {
 				}
 			} else {
 				// è un codice fiscale
-				callableStatementGetCodiceIpa = Helper.prepareCall(connection, schema, "PYENTSP_SEL_INFO_CIPA");
+				//inizio LP 20240828 - PGNTACWS-22
+				//callableStatementGetCodiceIpa = Helper.prepareCall(connection, schema, "PYENTSP_SEL_INFO_CIPA");
+				callableStatementGetCodiceIpa = prepareCall("PYENTSP_SEL_INFO_CIPA");
+				//fine LP 20240828 - PGNTACWS-22
 				callableStatementGetCodiceIpa.setString(1, primoArg); // ENT_CENTCFIS (idDominio)																		// "AAABBB00A00A123B"
 				callableStatementGetCodiceIpa.setString(2, codiceEnte); // ANE_CANECENT
 				callableStatementGetCodiceIpa.execute();
@@ -64,19 +72,31 @@ public class InviaDovutiDao extends BaseDaoHandler {
 		} catch (HelperException x) {
 			throw new Exception(x);
 		} finally {
-			if (callableStatementFlagDovutoInviato != null) {
+			//inizio LP 20240828 - PGNTACWS-22
+			//if (callableStatementFlagDovutoInviato != null) {
+			//	try {
+			//		callableStatementFlagDovutoInviato.close();
+			//	} catch (SQLException e) {
+			//		e.printStackTrace();
+			//	}
+			//}
+			if (callableStatementGetCodiceIpa != null) {
 				try {
-					callableStatementFlagDovutoInviato.close();
+					callableStatementGetCodiceIpa.close();
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
 			}
+			//fine LP 20240828 - PGNTACWS-22
 		}
 	}
 
 	public void aggiornaFlagInviaDovuto(int progressivoFlusso, String schema) throws Exception {
 		try {
-			callableStatementFlagDovutoInviato = Helper.prepareCall(connection, schema, "PYEH0SP_UPD_INV");
+			//inizio LP 20240828 - PGNTACWS-22
+			//callableStatementFlagDovutoInviato = Helper.prepareCall(connection, schema, "PYEH0SP_UPD_INV");
+			callableStatementFlagDovutoInviato = prepareCall("PYEH0SP_UPD_INV");
+			//fine LP 20240828 - PGNTACWS-22
 			callableStatementFlagDovutoInviato.setInt(1, progressivoFlusso);
 			callableStatementFlagDovutoInviato.setString(2, "Y");
 			callableStatementFlagDovutoInviato.execute();
@@ -99,10 +119,20 @@ public class InviaDovutiDao extends BaseDaoHandler {
 
 	public List<ArchivioCarichiDocumento> getDocumento(ArchivioCarichiDocumento in) throws DaoException {
 		List<ArchivioCarichiDocumento> listaDocumenti = new ArrayList<>();
+		Connection conn = null;
 		try {
 
-			connection.setAutoCommit(true);				
-			callableStatementGetDocumento = Helper.prepareCall(connection, schema, "PYEH1SP");	
+			//inizio LP 20240828 - PGNTACWS-22
+			//connection.setAutoCommit(true);				
+			//callableStatementGetDocumento = Helper.prepareCall(connection, schema, "PYEH1SP");
+			conn = getConnection(); 
+			if(!conn.getAutoCommit()) {
+				conn.setAutoCommit(true);
+			} else {
+				conn = null;
+			}
+			callableStatementGetDocumento = prepareCall("PYEH1SP");	
+			//fine LP 20240828 - PGNTACWS-22
 			
 			if(in != null) {
 				callableStatementGetDocumento.setString(1, in.getCodiceUtente());
@@ -148,6 +178,22 @@ public class InviaDovutiDao extends BaseDaoHandler {
 		} catch (HelperException x) {
 			throw new DaoException(x);
 		} finally {
+			//inizio LP 20240828 - PGNTACWS-22
+			if (callableStatementGetDocumento != null) {
+				try {
+					callableStatementGetDocumento.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			if(conn != null) {
+				try {
+					conn.setAutoCommit(false);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			//fine LP 20240828 - PGNTACWS-22
 		}
 		return listaDocumenti;
 	}

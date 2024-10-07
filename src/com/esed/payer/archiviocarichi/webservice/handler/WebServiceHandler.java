@@ -53,7 +53,6 @@ public abstract class WebServiceHandler extends JaxRpc10WebServiceHandler {
     	//fine LP PG200070
 	}
 	
-	@SuppressWarnings("unchecked")
 	private void setDbSchemaCodSocieta (Object endPointContext) {
 		ServletEndpointContext ctx=null;
 		
@@ -66,6 +65,7 @@ public abstract class WebServiceHandler extends JaxRpc10WebServiceHandler {
 			try {
 				SOAPHeader header = mc.getMessage().getSOAPPart().getEnvelope().getHeader();
 
+				@SuppressWarnings("rawtypes")
 				Iterator headers = header.examineAllHeaderElements(); //header.extractHeaderElements("http://schemas.xmlsoap.org/soap/actor/next");
 				while (headers.hasNext()) {
 					SOAPHeaderElement he = (SOAPHeaderElement)headers.next();
@@ -87,7 +87,7 @@ public abstract class WebServiceHandler extends JaxRpc10WebServiceHandler {
 		try {	
 			dataSource = ServiceLocator.getInstance().getDataSource("java:comp/env/".concat(dataSourceName));
 		} catch (ServiceLocatorException e) {
-			error(e.toString());
+			logger.error(e.toString());
 		}
 		return dataSource;
     }
